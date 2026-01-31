@@ -5,23 +5,15 @@ namespace EveCal.Api.Controllers;
 
 [ApiController]
 [Route("")]
-public class AuthController : ControllerBase
+public class AuthController(
+    IEveAuthService authService,
+    ILogger<AuthController> logger) : ControllerBase
 {
-    private readonly IEveAuthService _authService;
-    private readonly ILogger<AuthController> _logger;
 
     // Static storage for PKCE state during setup flow
     private static string? _pendingCodeVerifier;
     private static string? _pendingState;
     private static TaskCompletionSource<bool>? _setupCompletionSource;
-
-    public AuthController(
-        IEveAuthService authService,
-        ILogger<AuthController> logger)
-    {
-        _authService = authService;
-        _logger = logger;
-    }
 
     [HttpGet("callback")]
     public async Task<IActionResult> Callback(
@@ -32,7 +24,7 @@ public class AuthController : ControllerBase
     {
         if (!string.IsNullOrEmpty(error))
         {
-            _logger.LogError("OAuth error: {Error} - {Description}", error, error_description);
+            logger.LogError("OAuth error: {Error} - {Description}", error, error_description);
             return BadRequest(new { error, description = error_description });
         }
 
@@ -48,14 +40,14 @@ public class AuthController : ControllerBase
 
         try
         {
-            _logger.LogInformation("Received OAuth callback, exchanging code for tokens");
+            logger.LogInformation("Received OAuth callback, exchanging code for tokens");
 
-            var tokens = await _authService.ExchangeCodeAsync(code, _pendingCodeVerifier);
-            await _authService.StoreTokensAsync(tokens);
+            var tokens = await authService.ExchangeCodeAsync(code, _pendingCodeVerifier);
+            await authService.StoreTokensAsync(tokens);
 
-            var character = _authService.ParseJwtToken(tokens.AccessToken);
+            var character = authService.ParseJwtToken(tokens.AccessToken);
 
-            _logger.LogInformation("Setup complete for character {Name} ({Id})",
+            logger.LogInformation("Setup complete for character {Name} ({Id})",
                 character.CharacterName, character.CharacterId);
 
             // Signal setup completion
@@ -78,7 +70,7 @@ public class AuthController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to complete OAuth flow");
+            logger.LogError(ex, "Failed to complete OAuth flow");
             _setupCompletionSource?.TrySetException(ex);
             return StatusCode(500, new { error = "Failed to complete authentication", details = ex.Message });
         }
