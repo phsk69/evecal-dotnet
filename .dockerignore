@@ -1,0 +1,33 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.vs
+.vscode
+.idea
+*.swp
+
+# Build outputs
+**/bin
+**/obj
+**/out
+
+# Data/Secrets
+data
+*.enc
+*.key
+.env
+.env.*
+
+# Documentation
+*.md
+LICENSE
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Misc
+.claude
