@@ -1,16 +1,10 @@
 namespace EveCal.Api.Infrastructure;
 
-public class EsiHttpClientHandler : DelegatingHandler
+public class EsiHttpClientHandler(ILogger<EsiHttpClientHandler> logger) : DelegatingHandler
 {
-    private readonly ILogger<EsiHttpClientHandler> _logger;
     private static readonly Random Random = new();
     private static int _errorLimitRemain = 100;
     private static DateTime _errorLimitReset = DateTime.UtcNow;
-
-    public EsiHttpClientHandler(ILogger<EsiHttpClientHandler> logger)
-    {
-        _logger = logger;
-    }
 
     protected override async Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request,
@@ -24,7 +18,7 @@ public class EsiHttpClientHandler : DelegatingHandler
         if (_errorLimitRemain < 10 && DateTime.UtcNow < _errorLimitReset)
         {
             var waitTime = _errorLimitReset - DateTime.UtcNow;
-            _logger.LogWarning("Rate limit low ({Remaining}), waiting {Seconds}s",
+            logger.LogWarning("Rate limit low ({Remaining}), waiting {Seconds}s",
                 _errorLimitRemain, waitTime.TotalSeconds);
             await Task.Delay(waitTime, cancellationToken);
         }
@@ -57,7 +51,7 @@ public class EsiHttpClientHandler : DelegatingHandler
             for (int retry = 1; retry <= 3; retry++)
             {
                 var backoff = TimeSpan.FromSeconds(Math.Pow(2, retry));
-                _logger.LogWarning("ESI returned {Status}, retrying in {Seconds}s (attempt {Retry}/3)",
+                logger.LogWarning("ESI returned {Status}, retrying in {Seconds}s (attempt {Retry}/3)",
                     response.StatusCode, backoff.TotalSeconds, retry);
 
                 await Task.Delay(backoff, cancellationToken);

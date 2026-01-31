@@ -11,21 +11,12 @@ public interface IICalGeneratorService
     Task<string> GenerateFeedAsync();
 }
 
-public class ICalGeneratorService : IICalGeneratorService
+public class ICalGeneratorService(
+    IEveCalendarService calendarService,
+    ILogger<ICalGeneratorService> logger) : IICalGeneratorService
 {
-    private readonly IEveCalendarService _calendarService;
-    private readonly ILogger<ICalGeneratorService> _logger;
-
     private string? _cachedFeed;
     private DateTime _cacheExpiry = DateTime.MinValue;
-
-    public ICalGeneratorService(
-        IEveCalendarService calendarService,
-        ILogger<ICalGeneratorService> logger)
-    {
-        _calendarService = calendarService;
-        _logger = logger;
-    }
 
     public async Task<string> GenerateFeedAsync()
     {
@@ -35,7 +26,7 @@ public class ICalGeneratorService : IICalGeneratorService
             return _cachedFeed;
         }
 
-        var events = await _calendarService.GetCorporationEventsAsync();
+        var events = await calendarService.GetCorporationEventsAsync();
 
         var calendar = new Calendar
         {
@@ -71,7 +62,7 @@ public class ICalGeneratorService : IICalGeneratorService
         _cachedFeed = serializer.SerializeToString(calendar) ?? string.Empty;
         _cacheExpiry = DateTime.UtcNow.AddMinutes(5);
 
-        _logger.LogInformation("Generated ICS feed with {Count} events", events.Count);
+        logger.LogInformation("Generated ICS feed with {Count} events", events.Count);
 
         return _cachedFeed;
     }

@@ -9,24 +9,13 @@ public interface IEveCalendarService
     Task<List<EveCalendarEventDetail>> GetCorporationEventsAsync();
 }
 
-public class EveCalendarService : IEveCalendarService
+public class EveCalendarService(
+    IHttpClientFactory httpClientFactory,
+    IEveAuthService authService,
+    ILogger<EveCalendarService> logger) : IEveCalendarService
 {
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly IEveAuthService _authService;
-    private readonly ILogger<EveCalendarService> _logger;
-
     private List<EveCalendarEventDetail>? _cachedEvents;
     private DateTime _cacheExpiry = DateTime.MinValue;
-
-    public EveCalendarService(
-        IHttpClientFactory httpClientFactory,
-        IEveAuthService authService,
-        ILogger<EveCalendarService> logger)
-    {
-        _httpClientFactory = httpClientFactory;
-        _authService = authService;
-        _logger = logger;
-    }
 
     public async Task<List<EveCalendarEventDetail>> GetCorporationEventsAsync()
     {
@@ -36,20 +25,20 @@ public class EveCalendarService : IEveCalendarService
             return _cachedEvents;
         }
 
-        var tokens = await _authService.GetValidTokensAsync();
+        var tokens = await authService.GetValidTokensAsync();
         if (tokens == null)
         {
             throw new InvalidOperationException("No valid tokens available. Run setup first.");
         }
 
-        var character = _authService.ParseJwtToken(tokens.AccessToken);
-        var client = _httpClientFactory.CreateClient("ESI");
+        var character = authService.ParseJwtToken(tokens.AccessToken);
+        var client = httpClientFactory.CreateClient("ESI");
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
 
         // Get calendar event summaries
         var summaries = await GetEventSummariesAsync(client, character.CharacterId);
-        _logger.LogInformation("Found {Count} calendar events", summaries.Count);
+        logger.LogInformation("Found {Count} calendar events", summaries.Count);
 
         // Get details for each event and filter to corporation events only
         var corpEvents = new List<EveCalendarEventDetail>();
@@ -66,11 +55,11 @@ public class EveCalendarService : IEveCalendarService
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to get details for event {EventId}", summary.EventId);
+                logger.LogWarning(ex, "Failed to get details for event {EventId}", summary.EventId);
             }
         }
 
-        _logger.LogInformation("Found {Count} corporation events", corpEvents.Count);
+        logger.LogInformation("Found {Count} corporation events", corpEvents.Count);
 
         _cachedEvents = corpEvents;
         _cacheExpiry = DateTime.UtcNow.AddMinutes(5);
@@ -85,7 +74,7 @@ public class EveCalendarService : IEveCalendarService
         if (!response.IsSuccessStatusCode)
         {
             var error = await response.Content.ReadAsStringAsync();
-            _logger.LogError("Failed to get calendar: {Status} - {Error}",
+            logger.LogError("Failed to get calendar: {Status} - {Error}",
                 response.StatusCode, error);
             throw new InvalidOperationException($"ESI calendar request failed: {response.StatusCode}");
         }
@@ -101,7 +90,7 @@ public class EveCalendarService : IEveCalendarService
 
         if (!response.IsSuccessStatusCode)
         {
-            _logger.LogWarning("Failed to get event {EventId}: {Status}",
+            logger.LogWarning("Failed to get event {EventId}: {Status}",
                 eventId, response.StatusCode);
             return null;
         }

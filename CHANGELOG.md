@@ -2,11 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.1.1] - 2026-01-31
+## [0.1.1-1] - 2026-01-31
 
 ### Fixed
 - `EVE_CALLBACK_URL` environment variable now correctly overrides the default value
 - Added missing using statements in AuthController after linter refactoring
+
+### Changed
+- Converted all classes to use C# 12 primary constructors
 
 ## [0.1.0] - 2026-01-31
 
