@@ -14,22 +14,17 @@ public interface ITokenStorage
     string GetEncryptionKey();
 }
 
-public class TokenStorage : ITokenStorage
+public class TokenStorage(IOptions<EveConfiguration> options, ILogger<TokenStorage> logger) : ITokenStorage
 {
-    private readonly EveConfiguration _config;
-    private readonly ILogger<TokenStorage> _logger;
-    private readonly string _tokenFilePath;
-    private readonly string _keyFilePath;
+    private readonly EveConfiguration config = options.Value;
+    private readonly string _tokenFilePath = InitPath(options.Value.DataPath, "tokens.enc");
+    private readonly string _keyFilePath = InitPath(options.Value.DataPath, "encryption.key");
     private byte[]? _encryptionKey;
 
-    public TokenStorage(IOptions<EveConfiguration> config, ILogger<TokenStorage> logger)
+    private static string InitPath(string dataPath, string fileName)
     {
-        _config = config.Value;
-        _logger = logger;
-
-        Directory.CreateDirectory(_config.DataPath);
-        _tokenFilePath = Path.Combine(_config.DataPath, "tokens.enc");
-        _keyFilePath = Path.Combine(_config.DataPath, "encryption.key");
+        Directory.CreateDirectory(dataPath);
+        return Path.Combine(dataPath, fileName);
     }
 
     public string GetEncryptionKey()
@@ -57,7 +52,7 @@ public class TokenStorage : ITokenStorage
 
         _encryptionKey = RandomNumberGenerator.GetBytes(32);
         File.WriteAllBytes(_keyFilePath, _encryptionKey);
-        _logger.LogInformation("Generated new encryption key at {Path}", _keyFilePath);
+        logger.LogInformation("Generated new encryption key at {Path}", _keyFilePath);
     }
 
     public async Task SaveAsync(SsoCharacter character, string refreshToken)
@@ -74,14 +69,14 @@ public class TokenStorage : ITokenStorage
 
         var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
         await File.WriteAllTextAsync(_tokenFilePath, json);
-        _logger.LogInformation("Saved tokens for character {CharacterId}", character.CharacterId);
+        logger.LogInformation("Saved tokens for character {CharacterId}", character.CharacterId);
     }
 
     public async Task<StoredCharacterData?> LoadAsync()
     {
         if (!File.Exists(_tokenFilePath))
         {
-            _logger.LogWarning("No stored tokens found at {Path}", _tokenFilePath);
+            logger.LogWarning("No stored tokens found at {Path}", _tokenFilePath);
             return null;
         }
 
@@ -103,7 +98,7 @@ public class TokenStorage : ITokenStorage
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to load stored tokens");
+            logger.LogError(ex, "Failed to load stored tokens");
             return null;
         }
     }
