@@ -52,7 +52,7 @@ public class TokenStorage(IOptions<EveConfiguration> options, ILogger<TokenStora
 
         _encryptionKey = RandomNumberGenerator.GetBytes(32);
         File.WriteAllBytes(_keyFilePath, _encryptionKey);
-        logger.LogInformation("new encryption key just dropped at {Path}", _keyFilePath);
+        logger.LogInformation("🔑 new encryption key just dropped at {Path}", _keyFilePath);
     }
 
     public async Task SaveAsync(SsoCharacter character, string refreshToken)
@@ -69,14 +69,14 @@ public class TokenStorage(IOptions<EveConfiguration> options, ILogger<TokenStora
 
         var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
         await File.WriteAllTextAsync(_tokenFilePath, json);
-        logger.LogInformation("saved tokens for character {CharacterId}, secured the bag", character.CharacterId);
+        logger.LogInformation("💰 saved tokens for character {CharacterId}, secured the bag", character.CharacterId);
     }
 
     public async Task<StoredCharacterData?> LoadAsync()
     {
         if (!File.Exists(_tokenFilePath))
         {
-            logger.LogWarning("no tokens at {Path}, kinda sus", _tokenFilePath);
+            logger.LogWarning("🤨 no tokens at {Path}, kinda sus", _tokenFilePath);
             return null;
         }
 
@@ -98,7 +98,7 @@ public class TokenStorage(IOptions<EveConfiguration> options, ILogger<TokenStora
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "couldn't load stored tokens, big yikes");
+            logger.LogError(ex, "😬 couldn't load stored tokens, big yikes");
             return null;
         }
     }

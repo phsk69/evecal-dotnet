@@ -2,6 +2,7 @@ using EveCal.Api.Controllers;
 using EveCal.Api.Infrastructure;
 using EveCal.Api.Models;
 using EveCal.Api.Services;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -84,7 +85,7 @@ static async Task RunSetupModeAsync(WebApplication app)
     // see if this thing already set up
     if (tokenStorage.HasStoredTokens())
     {
-        logger.LogInformation("tokens already exist bestie, delete /app/data/tokens.enc to reconfigure");
+        logger.LogInformation("📁 tokens already exist bestie, delete /app/data/tokens.enc to reconfigure");
         Console.WriteLine();
         Console.WriteLine("============================================");
         Console.WriteLine("Tokens already exist!");
@@ -127,7 +128,7 @@ static async Task RunSetupModeAsync(WebApplication app)
 
         if (completedTask == timeoutTask)
         {
-            logger.LogError("setup took too long waiting for OAuth, big L");
+            logger.LogError("⏰ setup took too long waiting for OAuth, big L");
             Console.WriteLine("Setup timed out. Please try again.");
         }
         else if (completion.Task.IsCompletedSuccessfully)
@@ -142,7 +143,7 @@ static async Task RunSetupModeAsync(WebApplication app)
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "setup flopped fr");
+        logger.LogError(ex, "💀 setup flopped fr");
         Console.WriteLine($"Setup failed: {ex.Message}");
     }
 
@@ -156,11 +157,12 @@ static async Task RunNormalModeAsync(WebApplication app)
     var logger = app.Services.GetRequiredService<ILogger<Program>>();
     var authService = app.Services.GetRequiredService<IEveAuthService>();
     var tokenStorage = app.Services.GetRequiredService<ITokenStorage>();
+    var config = app.Services.GetRequiredService<IOptions<EveConfiguration>>().Value;
 
     // do we even have tokens bestie
     if (!tokenStorage.HasStoredTokens())
     {
-        logger.LogWarning("no tokens found bestie, run setup first: docker-compose run --rm --service-ports evecal setup");
+        logger.LogWarning("😤 no tokens found bestie, run setup first: docker-compose run --rm --service-ports evecal setup");
         Console.WriteLine();
         Console.WriteLine("============================================");
         Console.WriteLine("No tokens configured!");
@@ -178,17 +180,19 @@ static async Task RunNormalModeAsync(WebApplication app)
             if (tokens != null)
             {
                 var character = authService.ParseJwtToken(tokens.AccessToken);
-                logger.LogInformation("we locked in with {Name} ({Id})",
+                logger.LogInformation("🔒 we locked in with {Name} ({Id})",
                     character.CharacterName, character.CharacterId);
             }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "couldn't load tokens, run setup again bestie");
+            logger.LogError(ex, "💀 couldn't load tokens, run setup again bestie");
         }
     }
 
-    logger.LogInformation("calendar feed is bussin at http://localhost:8080/calendar/feed.ics");
+    // construct the feed URL from callback URL (replace /callback with /calendar/feed.ics)
+    var feedUrl = config.CallbackUrl.Replace("/callback", "/calendar/feed.ics");
+    logger.LogInformation("🔥 calendar feed is bussin at {FeedUrl}", feedUrl);
     await app.RunAsync();
 }
 

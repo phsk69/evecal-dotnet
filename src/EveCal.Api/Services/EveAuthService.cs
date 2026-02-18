@@ -89,7 +89,7 @@ public class EveAuthService(
         if (!response.IsSuccessStatusCode)
         {
             var error = await response.Content.ReadAsStringAsync();
-            logger.LogError("token exchange fumbled: {Error}", error);
+            logger.LogError("💀 token exchange fumbled: {Error}", error);
             throw new InvalidOperationException($"Token exchange failed: {error}");
         }
 
@@ -122,7 +122,7 @@ public class EveAuthService(
         if (!response.IsSuccessStatusCode)
         {
             var error = await response.Content.ReadAsStringAsync();
-            logger.LogError("token refresh took an L: {Error}", error);
+            logger.LogError("💀 token refresh took an L: {Error}", error);
             throw new InvalidOperationException($"Token refresh failed: {error}");
         }
 
@@ -187,7 +187,7 @@ public class EveAuthService(
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "couldn't refresh tokens, not bussin");
+                logger.LogError(ex, "💀 couldn't refresh tokens, not bussin");
             }
         }
 
@@ -204,7 +204,7 @@ public class EveAuthService(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "refresh on stored tokens flopped hard");
+            logger.LogError(ex, "💀 refresh on stored tokens flopped hard");
             return null;
         }
     }

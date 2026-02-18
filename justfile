@@ -24,8 +24,12 @@ logs:
 restart: build
     docker-compose up -d
 
-# Quick test endpoints
+# Run unit tests fr fr
 test:
+    dotnet test
+
+# Quick smoke test endpoints (service must be running)
+smoke:
     @echo "Status:"
     @curl -s http://localhost:8080/calendar/status | jq .
     @echo "\nFeed (first 20 lines):"

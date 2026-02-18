@@ -38,7 +38,7 @@ public class EveCalendarService(
 
         // grabbing them calendar event summaries
         var summaries = await GetEventSummariesAsync(client, character.CharacterId);
-        logger.LogInformation("found {Count} calendar events, lowkey lit", summaries.Count);
+        logger.LogInformation("📅 found {Count} calendar events, lowkey lit", summaries.Count);
 
         // getting the deets for each event, only corp ones tho
         var corpEvents = new List<EveCalendarEventDetail>();
@@ -55,11 +55,11 @@ public class EveCalendarService(
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "couldn't get deets for event {EventId}, it's giving nothing", summary.EventId);
+                logger.LogWarning(ex, "😤 couldn't get deets for event {EventId}, it's giving nothing", summary.EventId);
             }
         }
 
-        logger.LogInformation("found {Count} corp events, we eating good", corpEvents.Count);
+        logger.LogInformation("🍽️ found {Count} corp events, we eating good", corpEvents.Count);
 
         _cachedEvents = corpEvents;
         _cacheExpiry = DateTime.UtcNow.AddMinutes(5);
@@ -74,7 +74,7 @@ public class EveCalendarService(
         if (!response.IsSuccessStatusCode)
         {
             var error = await response.Content.ReadAsStringAsync();
-            logger.LogError("calendar said no: {Status} - {Error}",
+            logger.LogError("🚫 calendar said no: {Status} - {Error}",
                 response.StatusCode, error);
             throw new InvalidOperationException($"ESI calendar request failed: {response.StatusCode}");
         }
@@ -90,7 +90,7 @@ public class EveCalendarService(
 
         if (!response.IsSuccessStatusCode)
         {
-            logger.LogWarning("event {EventId} ghosted us: {Status}",
+            logger.LogWarning("👻 event {EventId} ghosted us: {Status}",
                 eventId, response.StatusCode);
             return null;
         }

@@ -2,4 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/EveCal.Api/EveCal.Api.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/EveCal.Api.Tests/EveCal.Api.Tests.csproj" />
+  </Folder>
 </Solution>

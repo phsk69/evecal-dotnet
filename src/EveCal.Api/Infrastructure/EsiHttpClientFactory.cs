@@ -18,7 +18,7 @@ public class EsiHttpClientHandler(ILogger<EsiHttpClientHandler> logger) : Delega
         if (_errorLimitRemain < 10 && DateTime.UtcNow < _errorLimitReset)
         {
             var waitTime = _errorLimitReset - DateTime.UtcNow;
-            logger.LogWarning("rate limit looking low ({Remaining}), chilling for {Seconds}s",
+            logger.LogWarning("⏳ rate limit looking low ({Remaining}), chilling for {Seconds}s",
                 _errorLimitRemain, waitTime.TotalSeconds);
             await Task.Delay(waitTime, cancellationToken);
         }
@@ -51,7 +51,7 @@ public class EsiHttpClientHandler(ILogger<EsiHttpClientHandler> logger) : Delega
             for (int retry = 1; retry <= 3; retry++)
             {
                 var backoff = TimeSpan.FromSeconds(Math.Pow(2, retry));
-                logger.LogWarning("ESI said {Status}, we trying again in {Seconds}s (attempt {Retry}/3)",
+                logger.LogWarning("🔄 ESI said {Status}, we trying again in {Seconds}s (attempt {Retry}/3)",
                     response.StatusCode, backoff.TotalSeconds, retry);
 
                 await Task.Delay(backoff, cancellationToken);
