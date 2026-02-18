@@ -49,6 +49,10 @@ builder.Services.AddSingleton<IICalGeneratorService, ICalGeneratorService>();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
+// litty logging formatter goes crazy fr fr 🔥
+builder.Logging.AddConsole(options => options.FormatterName = "litty");
+builder.Logging.AddConsoleFormatter<LittyConsoleFormatter, LittyConsoleFormatterOptions>();
+
 // Kestrel vibing on port 8080
 builder.WebHost.ConfigureKestrel(options =>
 {

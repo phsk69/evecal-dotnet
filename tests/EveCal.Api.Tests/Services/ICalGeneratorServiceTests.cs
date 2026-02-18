@@ -1,6 +1,8 @@
+using EveCal.Api.Infrastructure;
 using EveCal.Api.Models;
 using EveCal.Api.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 using Moq;
 using Xunit;
 
@@ -12,14 +14,22 @@ namespace EveCal.Api.Tests.Services;
 public class ICalGeneratorServiceTests
 {
     private readonly Mock<IEveCalendarService> _mockCalendarService;
-    private readonly Mock<ILogger<ICalGeneratorService>> _mockLogger;
+    private readonly ILogger<ICalGeneratorService> _logger;
     private readonly ICalGeneratorService _service;
 
     public ICalGeneratorServiceTests()
     {
         _mockCalendarService = new Mock<IEveCalendarService>();
-        _mockLogger = new Mock<ILogger<ICalGeneratorService>>();
-        _service = new ICalGeneratorService(_mockCalendarService.Object, _mockLogger.Object);
+
+        // real litty logger so test output is bussin too 🔥
+        var loggerFactory = LoggerFactory.Create(builder =>
+        {
+            builder.AddConsole(options => options.FormatterName = "litty");
+            builder.AddConsoleFormatter<LittyConsoleFormatter, LittyConsoleFormatterOptions>();
+        });
+        _logger = loggerFactory.CreateLogger<ICalGeneratorService>();
+
+        _service = new ICalGeneratorService(_mockCalendarService.Object, _logger);
     }
 
     [Fact]
