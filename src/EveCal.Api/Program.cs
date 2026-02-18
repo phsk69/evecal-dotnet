@@ -5,7 +5,7 @@ using EveCal.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure services
+// finna wire up these services
 builder.Services.Configure<EveConfiguration>(options =>
 {
     var clientId = builder.Configuration["Eve:ClientId"];
@@ -36,10 +36,10 @@ builder.Services.Configure<EveConfiguration>(options =>
     }
 });
 
-// Add HTTP clients
+// adding the HTTP clients fr
 builder.Services.AddEsiHttpClient();
 
-// Add application services
+// the main services go crazy here
 builder.Services.AddSingleton<ITokenStorage, TokenStorage>();
 builder.Services.AddSingleton<IEveAuthService, EveAuthService>();
 builder.Services.AddSingleton<IEveCalendarService, EveCalendarService>();
@@ -48,7 +48,7 @@ builder.Services.AddSingleton<IICalGeneratorService, ICalGeneratorService>();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
-// Configure Kestrel to listen on port 8080
+// Kestrel vibing on port 8080
 builder.WebHost.ConfigureKestrel(options =>
 {
     options.ListenAnyIP(8080);
@@ -56,7 +56,7 @@ builder.WebHost.ConfigureKestrel(options =>
 
 var app = builder.Build();
 
-// Check if running in setup mode
+// checking if we in setup mode rn
 var isSetupMode = args.Contains("setup");
 
 if (app.Environment.IsDevelopment())
@@ -81,10 +81,10 @@ static async Task RunSetupModeAsync(WebApplication app)
     var authService = app.Services.GetRequiredService<IEveAuthService>();
     var tokenStorage = app.Services.GetRequiredService<ITokenStorage>();
 
-    // Check if already configured
+    // see if this thing already set up
     if (tokenStorage.HasStoredTokens())
     {
-        logger.LogInformation("Tokens already exist. Delete /app/data/tokens.enc to reconfigure.");
+        logger.LogInformation("tokens already exist bestie, delete /app/data/tokens.enc to reconfigure");
         Console.WriteLine();
         Console.WriteLine("============================================");
         Console.WriteLine("Tokens already exist!");
@@ -116,18 +116,18 @@ static async Task RunSetupModeAsync(WebApplication app)
     Console.WriteLine("============================================");
     Console.WriteLine();
 
-    // Start the web server in the background
+    // web server running in the back, lowkey
     var serverTask = app.RunAsync();
 
     try
     {
-        // Wait for the OAuth callback with a timeout
+        // waiting for OAuth callback, not gonna wait forever tho
         var timeoutTask = Task.Delay(TimeSpan.FromMinutes(5));
         var completedTask = await Task.WhenAny(completion.Task, timeoutTask);
 
         if (completedTask == timeoutTask)
         {
-            logger.LogError("Setup timed out waiting for OAuth callback");
+            logger.LogError("setup took too long waiting for OAuth, big L");
             Console.WriteLine("Setup timed out. Please try again.");
         }
         else if (completion.Task.IsCompletedSuccessfully)
@@ -142,11 +142,11 @@ static async Task RunSetupModeAsync(WebApplication app)
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "Setup failed");
+        logger.LogError(ex, "setup flopped fr");
         Console.WriteLine($"Setup failed: {ex.Message}");
     }
 
-    // Give time for the response to be sent
+    // let the response cook real quick
     await Task.Delay(1000);
     await app.StopAsync();
 }
@@ -157,10 +157,10 @@ static async Task RunNormalModeAsync(WebApplication app)
     var authService = app.Services.GetRequiredService<IEveAuthService>();
     var tokenStorage = app.Services.GetRequiredService<ITokenStorage>();
 
-    // Check if tokens exist
+    // do we even have tokens bestie
     if (!tokenStorage.HasStoredTokens())
     {
-        logger.LogWarning("No tokens found. Run setup first: docker-compose run --rm --service-ports evecal setup");
+        logger.LogWarning("no tokens found bestie, run setup first: docker-compose run --rm --service-ports evecal setup");
         Console.WriteLine();
         Console.WriteLine("============================================");
         Console.WriteLine("No tokens configured!");
@@ -171,24 +171,24 @@ static async Task RunNormalModeAsync(WebApplication app)
     }
     else
     {
-        // Verify tokens are valid
+        // making sure these tokens hit different
         try
         {
             var tokens = await authService.GetValidTokensAsync();
             if (tokens != null)
             {
                 var character = authService.ParseJwtToken(tokens.AccessToken);
-                logger.LogInformation("Starting with character {Name} ({Id})",
+                logger.LogInformation("we locked in with {Name} ({Id})",
                     character.CharacterName, character.CharacterId);
             }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to load tokens. Run setup again.");
+            logger.LogError(ex, "couldn't load tokens, run setup again bestie");
         }
     }
 
-    logger.LogInformation("Calendar feed available at http://localhost:8080/calendar/feed.ics");
+    logger.LogInformation("calendar feed is bussin at http://localhost:8080/calendar/feed.ics");
     await app.RunAsync();
 }
 
