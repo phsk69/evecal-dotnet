@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using EveCal.Api.Models;
 using Ical.Net;
 using Ical.Net.CalendarComponents;
@@ -68,10 +69,16 @@ public class ICalGeneratorService(
 
     private static string CleanDescription(string text)
     {
-        // EVE calendar descriptions got HTML tags, we cleaning that up fr
+        // EVE calendar descriptions got HTML tags and showinfo links, we cleaning that up fr
         if (string.IsNullOrWhiteSpace(text)) return string.Empty;
 
-        return text
+        // yeet the showinfo anchor tags but keep the text inside them
+        var cleaned = Regex.Replace(text, @"<a\s+href=""showinfo:[^""]*"">([^<]*)</a>", "$1");
+
+        // also yeet any other anchor tags that might be lurking
+        cleaned = Regex.Replace(cleaned, @"<a\s[^>]*>([^<]*)</a>", "$1");
+
+        return cleaned
             .Replace("<br>", "\n")
             .Replace("<br/>", "\n")
             .Replace("<br />", "\n")
