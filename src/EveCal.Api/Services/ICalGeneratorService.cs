@@ -62,7 +62,7 @@ public class ICalGeneratorService(
         _cachedFeed = serializer.SerializeToString(calendar) ?? string.Empty;
         _cacheExpiry = DateTime.UtcNow.AddMinutes(5);
 
-        logger.LogInformation("ICS feed generated with {Count} events, absolutely ate", events.Count);
+        logger.LogInformation("🔥 ICS feed generated with {Count} events, absolutely ate", events.Count);
 
         return _cachedFeed;
     }
