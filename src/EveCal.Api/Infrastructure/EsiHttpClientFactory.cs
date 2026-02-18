@@ -10,26 +10,26 @@ public class EsiHttpClientHandler(ILogger<EsiHttpClientHandler> logger) : Delega
         HttpRequestMessage request,
         CancellationToken cancellationToken)
     {
-        // Add human-like delay
+        // adding delay so we don't look like a bot fr
         var delay = Random.Next(100, 500);
         await Task.Delay(delay, cancellationToken);
 
-        // Check rate limit status
+        // checking if rate limit is giving
         if (_errorLimitRemain < 10 && DateTime.UtcNow < _errorLimitReset)
         {
             var waitTime = _errorLimitReset - DateTime.UtcNow;
-            logger.LogWarning("Rate limit low ({Remaining}), waiting {Seconds}s",
+            logger.LogWarning("rate limit looking low ({Remaining}), chilling for {Seconds}s",
                 _errorLimitRemain, waitTime.TotalSeconds);
             await Task.Delay(waitTime, cancellationToken);
         }
 
-        // Set realistic headers
+        // headers gotta look legit
         request.Headers.UserAgent.ParseAdd("EveCal/1.0 (EVE Calendar Service; +https://github.com/evecal)");
         request.Headers.Accept.ParseAdd("application/json");
 
         var response = await base.SendAsync(request, cancellationToken);
 
-        // Track rate limits
+        // tracking rate limits, staying respectful
         if (response.Headers.TryGetValues("X-ESI-Error-Limit-Remain", out var remainValues))
         {
             if (int.TryParse(remainValues.FirstOrDefault(), out var remain))
@@ -45,13 +45,13 @@ public class EsiHttpClientHandler(ILogger<EsiHttpClientHandler> logger) : Delega
             }
         }
 
-        // Retry on 5xx with exponential backoff
+        // 5xx errors? we retry with backoff, not giving up
         if ((int)response.StatusCode >= 500)
         {
             for (int retry = 1; retry <= 3; retry++)
             {
                 var backoff = TimeSpan.FromSeconds(Math.Pow(2, retry));
-                logger.LogWarning("ESI returned {Status}, retrying in {Seconds}s (attempt {Retry}/3)",
+                logger.LogWarning("ESI said {Status}, we trying again in {Seconds}s (attempt {Retry}/3)",
                     response.StatusCode, backoff.TotalSeconds, retry);
 
                 await Task.Delay(backoff, cancellationToken);

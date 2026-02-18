@@ -20,7 +20,7 @@ public class ICalGeneratorService(
 
     public async Task<string> GenerateFeedAsync()
     {
-        // Return cached if valid
+        // cached feed if it still slaps
         if (_cachedFeed != null && DateTime.UtcNow < _cacheExpiry)
         {
             return _cachedFeed;
@@ -40,19 +40,18 @@ public class ICalGeneratorService(
             var calEvent = new CalendarEvent
             {
                 Uid = $"{evt.EventId}@eveonline.com",
-                Summary = evt.Title,
+                Summary = $"* {evt.Title}",
                 Description = CleanDescription(evt.Text),
                 DtStart = new CalDateTime(evt.Date, "UTC"),
                 DtEnd = new CalDateTime(evt.Date.AddMinutes(evt.Duration), "UTC"),
-                Organizer = new Organizer { CommonName = evt.OwnerName }
-            };
-
-            // Add importance as priority (1=high, 5=normal, 9=low)
-            calEvent.Priority = evt.Importance switch
-            {
-                2 => 1,  // High
-                1 => 5,  // Normal
-                _ => 9   // Low
+                Organizer = new Organizer { CommonName = evt.OwnerName },
+                // importance = priority vibes (1=high, 5=mid, 9=low)
+                Priority = evt.Importance switch
+                {
+                    2 => 1,  // High
+                    1 => 5,  // Normal
+                    _ => 9   // Low
+                }
             };
 
             calendar.Events.Add(calEvent);
@@ -62,15 +61,14 @@ public class ICalGeneratorService(
         _cachedFeed = serializer.SerializeToString(calendar) ?? string.Empty;
         _cacheExpiry = DateTime.UtcNow.AddMinutes(5);
 
-        logger.LogInformation("Generated ICS feed with {Count} events", events.Count);
+        logger.LogInformation("ICS feed generated with {Count} events, absolutely ate", events.Count);
 
         return _cachedFeed;
     }
 
     private static string CleanDescription(string text)
     {
-        // EVE calendar descriptions may contain HTML-like tags
-        // Clean them up for plain text display
+        // EVE calendar descriptions got HTML tags, we cleaning that up fr
         if (string.IsNullOrWhiteSpace(text)) return string.Empty;
 
         return text

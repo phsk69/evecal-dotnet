@@ -19,7 +19,7 @@ public class EveCalendarService(
 
     public async Task<List<EveCalendarEventDetail>> GetCorporationEventsAsync()
     {
-        // Return cached if valid
+        // serving cached if it still hits
         if (_cachedEvents != null && DateTime.UtcNow < _cacheExpiry)
         {
             return _cachedEvents;
@@ -36,11 +36,11 @@ public class EveCalendarService(
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
 
-        // Get calendar event summaries
+        // grabbing them calendar event summaries
         var summaries = await GetEventSummariesAsync(client, character.CharacterId);
-        logger.LogInformation("Found {Count} calendar events", summaries.Count);
+        logger.LogInformation("found {Count} calendar events, lowkey lit", summaries.Count);
 
-        // Get details for each event and filter to corporation events only
+        // getting the deets for each event, only corp ones tho
         var corpEvents = new List<EveCalendarEventDetail>();
 
         foreach (var summary in summaries)
@@ -55,11 +55,11 @@ public class EveCalendarService(
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Failed to get details for event {EventId}", summary.EventId);
+                logger.LogWarning(ex, "couldn't get deets for event {EventId}, it's giving nothing", summary.EventId);
             }
         }
 
-        logger.LogInformation("Found {Count} corporation events", corpEvents.Count);
+        logger.LogInformation("found {Count} corp events, we eating good", corpEvents.Count);
 
         _cachedEvents = corpEvents;
         _cacheExpiry = DateTime.UtcNow.AddMinutes(5);
@@ -74,7 +74,7 @@ public class EveCalendarService(
         if (!response.IsSuccessStatusCode)
         {
             var error = await response.Content.ReadAsStringAsync();
-            logger.LogError("Failed to get calendar: {Status} - {Error}",
+            logger.LogError("calendar said no: {Status} - {Error}",
                 response.StatusCode, error);
             throw new InvalidOperationException($"ESI calendar request failed: {response.StatusCode}");
         }
@@ -90,7 +90,7 @@ public class EveCalendarService(
 
         if (!response.IsSuccessStatusCode)
         {
-            logger.LogWarning("Failed to get event {EventId}: {Status}",
+            logger.LogWarning("event {EventId} ghosted us: {Status}",
                 eventId, response.StatusCode);
             return null;
         }

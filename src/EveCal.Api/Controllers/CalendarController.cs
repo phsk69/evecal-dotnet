@@ -19,12 +19,12 @@ public class CalendarController(
         }
         catch (InvalidOperationException ex) when (ex.Message.Contains("No valid tokens"))
         {
-            logger.LogWarning("Calendar requested but no valid tokens available");
+            logger.LogWarning("bestie tried to get calendar but we got no tokens rn");
             return StatusCode(503, new { error = "Service not configured. Run setup first." });
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to generate calendar feed");
+            logger.LogError(ex, "calendar feed generation took a fat L");
             return StatusCode(500, new { error = "Failed to generate calendar feed" });
         }
     }
@@ -58,7 +58,7 @@ public class CalendarController(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to get status");
+            logger.LogError(ex, "status check flopped hard");
             return StatusCode(500, new { error = "Failed to get status" });
         }
     }
