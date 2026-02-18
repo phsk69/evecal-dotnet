@@ -19,13 +19,13 @@ public class CalendarController(
         }
         catch (InvalidOperationException ex) when (ex.Message.Contains("No valid tokens"))
         {
-            logger.LogWarning("bestie tried to get calendar but we got no tokens rn");
-            return StatusCode(503, new { error = "Service not configured. Run setup first." });
+            logger.LogWarning("😤 bestie tried to get calendar but we got no tokens rn");
+            return StatusCode(503, new { error = "😤 Service not configured. Run setup first bestie." });
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "calendar feed generation took a fat L");
-            return StatusCode(500, new { error = "Failed to generate calendar feed" });
+            logger.LogError(ex, "💀 calendar feed generation took a fat L");
+            return StatusCode(500, new { error = "💀 Failed to generate calendar feed, big L" });
         }
     }
 
@@ -40,7 +40,7 @@ public class CalendarController(
                 return Ok(new
                 {
                     status = "not_configured",
-                    message = "Run setup to configure OAuth tokens"
+                    message = "😤 Run setup to configure OAuth tokens bestie"
                 });
             }
 
@@ -58,8 +58,8 @@ public class CalendarController(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "status check flopped hard");
-            return StatusCode(500, new { error = "Failed to get status" });
+            logger.LogError(ex, "💀 status check flopped hard");
+            return StatusCode(500, new { error = "💀 Failed to get status, not bussin" });
         }
     }
 }

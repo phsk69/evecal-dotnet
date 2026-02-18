@@ -10,6 +10,7 @@ a .NET 10 service that serves up your **corporation** EVE Online calendar events
 - encrypted token storage (security is bussin)
 - automatic token refresh so it stays working
 - human-like ESI requests with rate limit respect (we dont get banned here)
+- cleans up EVE showinfo tags from descriptions (calendar apps cant handle those)
 
 ## what you need first
 
@@ -112,6 +113,16 @@ dotnet run
 ```bash
 docker build -t evecal .
 ```
+
+### testing
+
+we got unit tests now bestie, run them with:
+
+```bash
+dotnet test
+```
+
+tests use xUnit and Moq, they verify the ICS generation is working correctly fr fr.
 
 ## architecture (how this thing is built fr)
 
