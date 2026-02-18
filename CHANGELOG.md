@@ -2,6 +2,16 @@
 
 all the fire updates go here bestie, no cap
 
+## [0.1.2] - 2026-02-18
+
+### fixed fr
+- yeeted EVE showinfo anchor tags from calendar descriptions (they were acting sus in ICS output)
+- descriptions now clean but keep the text content, very readable
+
+### new stuff
+- added unit test project with xUnit and Moq, testing is bussin now
+- 7 tests covering ICS generation and description cleaning
+
 ## [0.1.1-2] - 2026-02-18
 
 ### its giving transformation
