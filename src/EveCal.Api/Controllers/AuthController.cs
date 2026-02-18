@@ -10,7 +10,7 @@ public class AuthController(
     ILogger<AuthController> logger) : ControllerBase
 {
 
-    // Static storage for PKCE state during setup flow
+    // bestie we storing the PKCE state here no cap
     private static string? _pendingCodeVerifier;
     private static string? _pendingState;
     private static TaskCompletionSource<bool>? _setupCompletionSource;
@@ -24,7 +24,7 @@ public class AuthController(
     {
         if (!string.IsNullOrEmpty(error))
         {
-            logger.LogError("OAuth error: {Error} - {Description}", error, error_description);
+            logger.LogError("bruh OAuth fumbled: {Error} - {Description}", error, error_description);
             return BadRequest(new { error, description = error_description });
         }
 
@@ -40,20 +40,20 @@ public class AuthController(
 
         try
         {
-            logger.LogInformation("Received OAuth callback, exchanging code for tokens");
+            logger.LogInformation("slay we got the OAuth callback, finna exchange that code");
 
             var tokens = await authService.ExchangeCodeAsync(code, _pendingCodeVerifier);
             await authService.StoreTokensAsync(tokens);
 
             var character = authService.ParseJwtToken(tokens.AccessToken);
 
-            logger.LogInformation("Setup complete for character {Name} ({Id})",
+            logger.LogInformation("setup is bussin for {Name} ({Id}) no cap",
                 character.CharacterName, character.CharacterId);
 
-            // Signal setup completion
+            // setup just ate fr fr
             _setupCompletionSource?.TrySetResult(true);
 
-            // Clear pending state
+            // yeet the pending state
             _pendingCodeVerifier = null;
             _pendingState = null;
 
@@ -70,7 +70,7 @@ public class AuthController(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to complete OAuth flow");
+            logger.LogError(ex, "OAuth flow caught an L fr");
             _setupCompletionSource?.TrySetException(ex);
             return StatusCode(500, new { error = "Failed to complete authentication", details = ex.Message });
         }

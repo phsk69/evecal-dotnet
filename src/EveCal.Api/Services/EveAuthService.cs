@@ -48,15 +48,15 @@ public class EveAuthService(
 
     public (string AuthUrl, string CodeVerifier, string State) GenerateAuthorizationUrl()
     {
-        // Generate PKCE code verifier (32 bytes = 256 bits)
+        // cooking up PKCE code verifier (32 bytes = 256 bits) fr
         var codeVerifierBytes = RandomNumberGenerator.GetBytes(32);
         var codeVerifier = Base64UrlEncode(codeVerifierBytes);
 
-        // Generate code challenge (S256)
+        // code challenge generation going crazy (S256)
         var challengeBytes = SHA256.HashData(Encoding.ASCII.GetBytes(codeVerifier));
         var codeChallenge = Base64UrlEncode(challengeBytes);
 
-        // Generate state with UUID
+        // state got that UUID drip
         var state = Base64UrlEncode(Encoding.UTF8.GetBytes(
             JsonSerializer.Serialize(new { uuid = Guid.NewGuid().ToString() })));
 
@@ -89,7 +89,7 @@ public class EveAuthService(
         if (!response.IsSuccessStatusCode)
         {
             var error = await response.Content.ReadAsStringAsync();
-            logger.LogError("Token exchange failed: {Error}", error);
+            logger.LogError("token exchange fumbled: {Error}", error);
             throw new InvalidOperationException($"Token exchange failed: {error}");
         }
 
@@ -122,7 +122,7 @@ public class EveAuthService(
         if (!response.IsSuccessStatusCode)
         {
             var error = await response.Content.ReadAsStringAsync();
-            logger.LogError("Token refresh failed: {Error}", error);
+            logger.LogError("token refresh took an L: {Error}", error);
             throw new InvalidOperationException($"Token refresh failed: {error}");
         }
 
@@ -149,7 +149,7 @@ public class EveAuthService(
         var subClaim = token.Claims.FirstOrDefault(c => c.Type == "sub")?.Value
             ?? throw new InvalidOperationException("Missing sub claim");
 
-        // Subject format: "CHARACTER:EVE:123456"
+        // subject be like: "CHARACTER:EVE:123456"
         var parts = subClaim.Split(':');
         if (parts.Length < 3 || !int.TryParse(parts[2], out var characterId))
         {
@@ -170,13 +170,13 @@ public class EveAuthService(
 
     public async Task<EveTokens?> GetValidTokensAsync()
     {
-        // Return cached tokens if still valid
+        // giving you the cached tokens if they still slap
         if (_currentTokens != null && !_currentTokens.NeedsRefresh)
         {
             return _currentTokens;
         }
 
-        // Try to refresh if we have tokens
+        // finna refresh these tokens if we got em
         if (_currentTokens != null)
         {
             try
@@ -187,11 +187,11 @@ public class EveAuthService(
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to refresh tokens");
+                logger.LogError(ex, "couldn't refresh tokens, not bussin");
             }
         }
 
-        // Load from storage
+        // pulling from storage rn
         var stored = await tokenStorage.LoadAsync();
         if (stored == null) return null;
 
@@ -204,7 +204,7 @@ public class EveAuthService(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to refresh stored tokens");
+            logger.LogError(ex, "refresh on stored tokens flopped hard");
             return null;
         }
     }
