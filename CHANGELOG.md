@@ -2,6 +2,17 @@
 
 all the fire updates go here bestie, no cap
 
+## [0.2.0] - 2026-02-18
+
+### new stuff 🆕
+- `LittyConsoleFormatter` just dropped and it EATS 🔥 custom console log formatter that hijacks ALL logs - framework AND app
+- every log level got its own emoji drip: 👀 Trace, 🔍 Debug, 🔥 Info, 😤 Warn, 💀 Error, ☠️ Critical
+- ANSI color-coded output in terminal - green info, yellow warns, red errors, the terminal looks absolutely bussin now 🎨
+- short category names so `Microsoft.Hosting.Lifetime` just shows as `Lifetime`, no namespace bloat
+- dim timestamps and categories so the actual message stays the main character
+- existing tests upgraded from silent mock loggers to real litty loggers, test output is fire now too 🧪
+- 10 new unit tests for the formatter, 26 total tests all passing no cap ✅
+
 ## [0.1.2] - 2026-02-18
 
 ### fixed fr 🔧
