@@ -1,25 +1,32 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+all the fire updates go here bestie, no cap
+
+## [0.1.1-2] - 2026-02-18
+
+### its giving transformation
+- converted all code comments to gen alpha style fr fr
+- log messages now absolutely slaying
+- added asterisk prefix to calendar event titles (for the boomers who import instead of subscribe, we got you)
 
 ## [0.1.1-1] - 2026-01-31
 
-### Fixed
-- `EVE_CALLBACK_URL` environment variable now correctly overrides the default value
-- Added missing using statements in AuthController after linter refactoring
+### fixed that stuff
+- `EVE_CALLBACK_URL` env var was acting sus, now it actually overrides the default like its supposed to
+- yeeted some missing using statements back into AuthController after the linter did its thing
 
-### Changed
-- Converted all classes to use C# 12 primary constructors
+### glow up
+- all classes converted to C# 12 primary constructors, they hit different now
 
 ## [0.1.0] - 2026-01-31
 
-### Added
-- Initial release
-- PKCE OAuth flow for EVE SSO authentication
-- Headless setup mode for Docker environments
-- ICS/iCal feed generation for corporation calendar events
-- Encrypted token storage with AES-256
-- Automatic token refresh
-- Rate-limited ESI API client with retry logic
-- Docker and docker-compose configuration
-- Human-like request delays to respect ESI rate limits
+### the beginning fr fr
+- initial release dropped, lets gooo
+- PKCE OAuth flow for EVE SSO auth (no client secret needed, we move smarter not harder)
+- headless setup mode for Docker environments, very convenient bestie
+- ICS/iCal feed generation for corp calendar events, your outlook gonna eat this up
+- encrypted token storage with AES-256, security is bussin
+- automatic token refresh so you dont gotta worry bout nothing
+- rate-limited ESI API client with retry logic, we respectful to CCP fr
+- Docker and docker-compose config included, deploy with ease
+- human-like request delays so ESI doesnt think were a bot lmao
