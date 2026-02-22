@@ -2,7 +2,8 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-# Copy project file and restore
+# Copy project files and restore (Directory.Build.props sets the version bestie)
+COPY Directory.Build.props ./
 COPY src/EveCal.Api/EveCal.Api.csproj ./EveCal.Api/
 RUN dotnet restore ./EveCal.Api/EveCal.Api.csproj
 
@@ -16,8 +17,8 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
 # create non-root user so we running rootless bestie 🔒
-RUN groupadd -g 1654 evecal && \
-    useradd -u 1654 -g evecal -s /bin/false evecal
+RUN groupadd -g 10001 evecal && \
+    useradd -u 10001 -g evecal -s /bin/false evecal
 
 # create data and logs directories owned by evecal user
 RUN mkdir -p /app/data /app/logs && \

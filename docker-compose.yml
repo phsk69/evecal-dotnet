@@ -1,6 +1,7 @@
 services:
   evecal:
     build: .
+    image: ghcr.io/phsk69/evecal-dotnet:latest
     ports:
       - "8080:8080"
     volumes:

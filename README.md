@@ -65,7 +65,8 @@ a .NET 10 service that serves up your **corporation** EVE Online calendar events
 3. **start the service**
 
    ```bash
-   docker-compose up -d
+   just up tag      # pull latest image from GHCR
+   # or: just up local  # build from source
    ```
 
 4. **subscribe to the calendar**
