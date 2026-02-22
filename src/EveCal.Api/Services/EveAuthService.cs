@@ -89,8 +89,9 @@ public class EveAuthService(
         if (!response.IsSuccessStatusCode)
         {
             var error = await response.Content.ReadAsStringAsync();
-            logger.LogError("💀 token exchange fumbled: {Error}", error);
-            throw new InvalidOperationException($"Token exchange failed: {error}");
+            var safeError = error.Length > 1000 ? error[..997] + "..." : error;
+            logger.LogError("💀 token exchange fumbled: {Error}", safeError);
+            throw new InvalidOperationException($"Token exchange failed: {safeError}");
         }
 
         var json = await response.Content.ReadAsStringAsync();
@@ -122,8 +123,9 @@ public class EveAuthService(
         if (!response.IsSuccessStatusCode)
         {
             var error = await response.Content.ReadAsStringAsync();
-            logger.LogError("💀 token refresh took an L: {Error}", error);
-            throw new InvalidOperationException($"Token refresh failed: {error}");
+            var safeError = error.Length > 1000 ? error[..997] + "..." : error;
+            logger.LogError("💀 token refresh took an L: {Error}", safeError);
+            throw new InvalidOperationException($"Token refresh failed: {safeError}");
         }
 
         var json = await response.Content.ReadAsStringAsync();

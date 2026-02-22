@@ -2,6 +2,9 @@ using EveCal.Api.Controllers;
 using EveCal.Api.Infrastructure;
 using EveCal.Api.Models;
 using EveCal.Api.Services;
+using LittyLogs;
+using LittyLogs.File;
+using LittyLogs.Webhooks;
 using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -49,9 +52,27 @@ builder.Services.AddSingleton<IICalGeneratorService, ICalGeneratorService>();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
-// litty logging formatter goes crazy fr fr 🔥
-builder.Logging.AddConsole(options => options.FormatterName = "litty");
-builder.Logging.AddConsoleFormatter<LittyConsoleFormatter, LittyConsoleFormatterOptions>();
+// litty-logs NuGet package goes absolutely feral on these logs fr fr 🔥
+builder.Logging.ClearProviders();
+builder.Logging.AddLittyLogs();
+builder.Logging.AddLittyFileLogs(opts =>
+{
+    opts.FilePath = "logs/evecal.log";
+    opts.RollingInterval = LittyRollingInterval.Daily;
+    opts.MaxFileSizeBytes = 10 * 1024 * 1024;
+});
+
+// matrix webhook logging — the room stays informed no cap 📨
+var webhookUrl = builder.Configuration["Matrix:WebhookUrl"]
+    ?? Environment.GetEnvironmentVariable("MATRIX_WEBHOOK_URL");
+if (!string.IsNullOrEmpty(webhookUrl))
+{
+    builder.Logging.AddLittyMatrixLogs(webhookUrl, opts =>
+    {
+        opts.MinimumLevel = LogLevel.Warning;
+        opts.Username = "EveCal";
+    });
+}
 
 // Kestrel vibing on port 8080
 builder.WebHost.ConfigureKestrel(options =>
@@ -122,7 +143,8 @@ static async Task RunSetupModeAsync(WebApplication app)
     Console.WriteLine();
 
     // web server running in the back, lowkey
-    var serverTask = app.RunAsync();
+    using var cts = new CancellationTokenSource();
+    var serverTask = app.RunAsync(cts.Token);
 
     try
     {
@@ -151,9 +173,9 @@ static async Task RunSetupModeAsync(WebApplication app)
         Console.WriteLine($"Setup failed: {ex.Message}");
     }
 
-    // let the response cook real quick
+    // let the response cook real quick then dip
     await Task.Delay(1000);
-    await app.StopAsync();
+    await cts.CancelAsync();
 }
 
 static async Task RunNormalModeAsync(WebApplication app)
@@ -186,6 +208,7 @@ static async Task RunNormalModeAsync(WebApplication app)
                 var character = authService.ParseJwtToken(tokens.AccessToken);
                 logger.LogInformation("🔒 we locked in with {Name} ({Id})",
                     character.CharacterName, character.CharacterId);
+
             }
         }
         catch (Exception ex)

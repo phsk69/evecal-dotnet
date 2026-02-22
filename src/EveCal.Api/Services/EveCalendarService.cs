@@ -74,8 +74,9 @@ public class EveCalendarService(
         if (!response.IsSuccessStatusCode)
         {
             var error = await response.Content.ReadAsStringAsync();
+            var safeError = error.Length > 1000 ? error[..997] + "..." : error;
             logger.LogError("🚫 calendar said no: {Status} - {Error}",
-                response.StatusCode, error);
+                response.StatusCode, safeError);
             throw new InvalidOperationException($"ESI calendar request failed: {response.StatusCode}");
         }
 

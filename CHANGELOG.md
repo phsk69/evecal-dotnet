@@ -2,6 +2,39 @@
 
 all the fire updates go here bestie, no cap
 
+## [0.3.0] - 2026-02-21
+
+### the great litty-logs migration 🔥💅
+
+#### logging glow up
+- yeeted the homegrown `LittyConsoleFormatter` and replaced it with the official [`LittyLogs`](https://github.com/phsk69/litty-logs-dotnet) NuGet package — same vibes but maintained as a proper library now no cap 📦
+- framework log messages now get auto-rewritten into gen alpha style (e.g. "Application started" becomes "app is bussin and ready to slay bestie 💅") 🔥
+- added `LittyLogs.File` for persistent file logging with daily rolling rotation and 10MB max file size 📝
+- installed `LittyLogs.Tool` as a local dotnet tool — `just test` now shows litty-fied test output with emojis for pass/fail ✅💀
+
+#### Matrix webhook notifications 📨
+- new `MatrixWebhookService` sends notifications to a Matrix room via webhook
+- fires on service startup (with character name) and token refresh failures
+- fire-and-forget design — Matrix being down never crashes the app, resilience is bussin 💪
+- configurable via `MATRIX_ENABLED`, `MATRIX_WEBHOOK_URL`, `MATRIX_API_KEY` env vars
+- 8 new tests covering disabled state, enabled posting, HTTP failure resilience
+
+#### rootless Docker container 🔒
+- container now runs as non-root user `evecal` (UID 1654), security going crazy
+- data and logs directories created with proper ownership
+- named Docker volume `evecal-logs` for persistent log storage
+
+#### full release pipeline 🚀
+- adopted gitflow release automation from litty-logs — `just release`, `just hotfix`, `just finish` all work
+- Forgejo CI pipeline: build + test on every push to develop/master
+- Forgejo release pipeline: triggered by `v*` tags, produces:
+  - 6 cross-platform self-contained binaries (linux-x64, linux-arm64, win-x64, win-arm64, osx-x64, osx-arm64)
+  - multi-arch Docker images (amd64 + arm64) pushed to GHCR + Forgejo registry
+  - Forgejo + GitHub mirror releases with changelog notes
+- `Directory.Build.props` as single source of truth for versioning
+- version sanity check in pipeline — tag must match props or it fails
+- 15 tests total, all passing no cap ✅
+
 ## [0.2.0] - 2026-02-18
 
 ### new stuff 🆕

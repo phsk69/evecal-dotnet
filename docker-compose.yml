@@ -5,6 +5,7 @@ services:
       - "8080:8080"
     volumes:
       - ./data:/app/data
+      - evecal-logs:/app/logs
     env_file:
       - .env
     environment:
@@ -12,4 +13,9 @@ services:
       - EVE_CALLBACK_URL=${EVE_CALLBACK_URL:-http://localhost:8080/callback}
       - EVE_SCOPES=${EVE_SCOPES:-esi-calendar.read_calendar_events.v1 esi-corporations.read_corporation_membership.v1 esi-characters.read_corporation_roles.v1}
       - CALENDAR_REFRESH_MINUTES=${CALENDAR_REFRESH_MINUTES:-15}
+      - MATRIX_WEBHOOK_URL=${MATRIX_WEBHOOK_URL:-}
     restart: unless-stopped
+
+volumes:
+  evecal-logs:
+    name: evecal-logs

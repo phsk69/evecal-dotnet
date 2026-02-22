@@ -12,10 +12,17 @@ public interface IICalGeneratorService
     Task<string> GenerateFeedAsync();
 }
 
-public class ICalGeneratorService(
+public partial class ICalGeneratorService(
     IEveCalendarService calendarService,
     ILogger<ICalGeneratorService> logger) : IICalGeneratorService
 {
+    // compiled + non-backtracking = no ReDoS possible, regex stays safe fr fr 🔒
+    [GeneratedRegex(@"<a\s+href=""showinfo:[^""]*"">([^<]*)</a>", RegexOptions.NonBacktracking)]
+    private static partial Regex ShowInfoRegex();
+
+    [GeneratedRegex(@"<a\s[^>]*>([^<]*)</a>", RegexOptions.NonBacktracking)]
+    private static partial Regex AnchorRegex();
+
     private string? _cachedFeed;
     private DateTime _cacheExpiry = DateTime.MinValue;
 
@@ -73,10 +80,10 @@ public class ICalGeneratorService(
         if (string.IsNullOrWhiteSpace(text)) return string.Empty;
 
         // yeet the showinfo anchor tags but keep the text inside them
-        var cleaned = Regex.Replace(text, @"<a\s+href=""showinfo:[^""]*"">([^<]*)</a>", "$1");
+        var cleaned = ShowInfoRegex().Replace(text, "$1");
 
         // also yeet any other anchor tags that might be lurking
-        cleaned = Regex.Replace(cleaned, @"<a\s[^>]*>([^<]*)</a>", "$1");
+        cleaned = AnchorRegex().Replace(cleaned, "$1");
 
         return cleaned
             .Replace("<br>", "\n")

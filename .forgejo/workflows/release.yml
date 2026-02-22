@@ -1,0 +1,263 @@
+# release pipeline — tag goes brrr, binaries drop, docker images ship 🚀
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-test:
+    runs-on: linux
+    steps:
+      - name: yoink the code 📥
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: figure out the version from the tag 🏷️
+        id: version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          if [[ "$VERSION" == *-* ]]; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+            echo "version is ${VERSION} (pre-release) — test drop incoming 🧪"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+            echo "version is ${VERSION} lets gooo 🔥"
+          fi
+
+      - name: sanity check — make sure tag matches Directory.Build.props 🧐
+        run: |
+          props_version=$(grep -oP '(?<=<Version>)[^<]+' Directory.Build.props)
+          if [ "$props_version" != "${{ steps.version.outputs.version }}" ]; then
+            echo "bruh the tag says ${{ steps.version.outputs.version }} but Directory.Build.props says ${props_version} thats not it 💀"
+            exit 1
+          fi
+          echo "version vibes match — ${props_version} 🔥"
+
+      - name: build in release mode 🏗️
+        run: dotnet build --configuration Release
+
+      - name: test one more time for the culture 🧪
+        run: dotnet test --configuration Release --no-build
+        env:
+          MATRIX_WEBHOOK_URL: ${{ secrets.MATRIX_WEBHOOK_URL }}
+
+  build-assets:
+    runs-on: linux
+    needs: build-and-test
+    strategy:
+      matrix:
+        include:
+          - rid: linux-x64
+            archive: tar.gz
+          - rid: linux-arm64
+            archive: tar.gz
+          - rid: osx-x64
+            archive: tar.gz
+          - rid: osx-arm64
+            archive: tar.gz
+          - rid: win-x64
+            archive: zip
+          - rid: win-arm64
+            archive: zip
+    steps:
+      - name: yoink the code 📥
+        uses: actions/checkout@v4
+
+      - name: figure out the version 🏷️
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: publish for ${{ matrix.rid }} 🏗️
+        run: |
+          dotnet publish src/EveCal.Api \
+            --configuration Release \
+            --runtime ${{ matrix.rid }} \
+            --self-contained \
+            -p:PublishSingleFile=true \
+            -p:IncludeNativeLibrariesForSelfExtract=true \
+            --output ./publish/${{ matrix.rid }}
+
+      - name: package the goods 📦
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          cd ./publish/${{ matrix.rid }}
+          if [ "${{ matrix.archive }}" = "tar.gz" ]; then
+            tar -czf "../../evecal-${VERSION}-${{ matrix.rid }}.tar.gz" .
+          else
+            zip -r "../../evecal-${VERSION}-${{ matrix.rid }}.zip" .
+          fi
+
+      - name: upload artifact 📤
+        uses: actions/upload-artifact@v4
+        with:
+          name: evecal-${{ matrix.rid }}
+          path: evecal-*.${{ matrix.archive }}
+
+  build-docker:
+    runs-on: linux
+    needs: build-and-test
+    steps:
+      - name: yoink the code 📥
+        uses: actions/checkout@v4
+
+      - name: figure out the version 🏷️
+        id: version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          if [[ "$VERSION" == *-* ]]; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: set up docker buildx 🐳
+        uses: docker/setup-buildx-action@v3
+
+      - name: set up QEMU for multi-arch 🏗️
+        uses: docker/setup-qemu-action@v3
+
+      - name: login to GHCR 🔐
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GH_PAT }}
+
+      - name: login to Forgejo registry 🔐
+        uses: docker/login-action@v3
+        with:
+          registry: git.ssy.dk
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: figure out docker tags 🏷️
+        id: tags
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          PRERELEASE="${{ steps.version.outputs.prerelease }}"
+          GHCR="ghcr.io/phsk69/evecal-dotnet"
+          FORGEJO="git.ssy.dk/public/evecal-dotnet"
+          TAGS="${GHCR}:v${VERSION},${FORGEJO}:v${VERSION}"
+          if [ "$PRERELEASE" = "false" ]; then
+            TAGS="${TAGS},${GHCR}:latest,${FORGEJO}:latest"
+          fi
+          echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
+
+      - name: build and push multi-arch image 🐳🔥
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.tags.outputs.tags }}
+
+  create-release:
+    runs-on: linux
+    needs: [build-assets, build-docker]
+    steps:
+      - name: yoink the code 📥
+        uses: actions/checkout@v4
+
+      - name: figure out the version 🏷️
+        id: version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          if [[ "$VERSION" == *-* ]]; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: download all artifacts 📥
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+          merge-multiple: true
+
+      - name: flex what we got 💅
+        run: ls -la ./artifacts/
+
+      - name: extract changelog section for this version 📜
+        id: changelog
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          NOTES=$(awk "/^## \[${VERSION}\]/{found=1; next} /^## \[/{if(found) exit} found{print}" CHANGELOG.md)
+          if [ -z "$NOTES" ]; then
+            NOTES="v${VERSION} dropped no cap — check the commits for the full vibe 🔥"
+          fi
+          {
+            echo "notes<<CHANGELOG_EOF"
+            echo "$NOTES"
+            echo "CHANGELOG_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: create forgejo release — home turf first 🏠🔥
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_NOTES: ${{ steps.changelog.outputs.notes }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="${{ steps.version.outputs.tag }}"
+          PRERELEASE="${{ steps.version.outputs.prerelease }}"
+          API_URL="${GITHUB_SERVER_URL}/api/v1"
+          REPO="${GITHUB_REPOSITORY}"
+          RELEASE_ID=$(curl -s -X POST \
+            -H "Authorization: token ${GITHUB_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"tag_name\": \"${TAG}\", \"name\": \"v${VERSION} — new drop 🔥\", \"body\": $(echo "$RELEASE_NOTES" | jq -Rs .), \"prerelease\": ${PRERELEASE}}" \
+            "${API_URL}/repos/${REPO}/releases" | jq -r '.id')
+          if [ "$RELEASE_ID" = "null" ] || [ -z "$RELEASE_ID" ]; then
+            echo "bruh forgejo release creation failed 💀"
+            exit 1
+          fi
+          echo "forgejo release created with id ${RELEASE_ID} 🔥"
+          for asset in ./artifacts/evecal-*; do
+            filename=$(basename "$asset")
+            echo "uploading ${filename} to forgejo release 📤"
+            curl -s -X POST \
+              -H "Authorization: token ${GITHUB_TOKEN}" \
+              -H "Content-Type: application/octet-stream" \
+              --data-binary "@${asset}" \
+              "${API_URL}/repos/${REPO}/releases/${RELEASE_ID}/assets?name=${filename}"
+          done
+          echo "forgejo release is bussin 🔥"
+
+      - name: create github release on the mirror 🪞
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          RELEASE_NOTES: ${{ steps.changelog.outputs.notes }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="${{ steps.version.outputs.tag }}"
+          PRERELEASE_FLAG=""
+          if [ "${{ steps.version.outputs.prerelease }}" = "true" ]; then
+            PRERELEASE_FLAG="--prerelease"
+          fi
+          echo "waiting for forgejo mirror to sync the tag to github..."
+          for i in $(seq 1 30); do
+            if gh api repos/phsk69/evecal-dotnet/git/refs/tags/"${TAG}" --silent 2>/dev/null; then
+              echo "tag ${TAG} found on github lets gooo 🔥"
+              break
+            fi
+            if [ "$i" = "30" ]; then
+              echo "bruh tag ${TAG} still not on github after 30 tries thats not it 💀"
+              exit 1
+            fi
+            echo "mirror aint synced yet, waiting 2s... (attempt ${i}/30)"
+            sleep 2
+          done
+          gh release create "${TAG}" \
+            --repo "phsk69/evecal-dotnet" \
+            --title "v${VERSION} — new drop 🔥" \
+            --notes "$RELEASE_NOTES" \
+            $PRERELEASE_FLAG \
+            ./artifacts/evecal-*

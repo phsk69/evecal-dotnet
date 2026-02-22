@@ -1,0 +1,2 @@
+-P linux=catthehacker/ubuntu:full-latest
+-P ubuntu-latest=catthehacker/ubuntu:full-latest
