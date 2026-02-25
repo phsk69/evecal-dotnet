@@ -21,7 +21,7 @@ data
 .env.*
 
 # Dev settings — keep those secrets local bestie 🔒
-**/appsettings.Development.json
+**/appsettings.*.json
 
 # Documentation
 *.md

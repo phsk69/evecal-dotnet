@@ -2,38 +2,69 @@
 
 all the fire updates go here bestie, no cap
 
-## [0.3.0] - 2026-02-21
+## [0.3.0] - 2026-02-22
 
-### the great litty-logs migration 🔥💅
+### the full glow up — LittyLogs 0.2.3 + security + CI/CD + observability 🔥💅
 
-#### logging glow up
-- yeeted the homegrown `LittyConsoleFormatter` and replaced it with the official [`LittyLogs`](https://github.com/phsk69/litty-logs-dotnet) NuGet package — same vibes but maintained as a proper library now no cap 📦
-- framework log messages now get auto-rewritten into gen alpha style (e.g. "Application started" becomes "app is bussin and ready to slay bestie 💅") 🔥
-- added `LittyLogs.File` for persistent file logging with daily rolling rotation and 10MB max file size 📝
-- installed `LittyLogs.Tool` as a local dotnet tool — `just test` now shows litty-fied test output with emojis for pass/fail ✅💀
+#### LittyLogs upgrade 0.1.4 → 0.2.3 📦
+- yeeted the homegrown `LittyConsoleFormatter` and replaced with the official [`LittyLogs`](https://github.com/phsk69/litty-logs-dotnet) NuGet package no cap
+- `LittyLogs.File` for persistent file logging with daily rolling rotation and 10MB max size 📝
+- `LittyLogs.Webhooks` for Matrix hookshot notifications — warnings and errors go straight to the chat fr fr 📨
+- `LittyLogs.Tool` 0.2.3 as local dotnet tool — `dotnet litty test`, `dotnet litty build`, `dotnet litty publish` all bussin
+- `.config/dotnet-tools.json` now tracked in git so `dotnet tool restore` works for everyone
 
-#### Matrix webhook notifications 📨
-- new `MatrixWebhookService` sends notifications to a Matrix room via webhook
-- fires on service startup (with character name) and token refresh failures
-- fire-and-forget design — Matrix being down never crashes the app, resilience is bussin 💪
-- configurable via `MATRIX_ENABLED`, `MATRIX_WEBHOOK_URL`, `MATRIX_API_KEY` env vars
-- 8 new tests covering disabled state, enabled posting, HTTP failure resilience
+#### Matrix webhook notifications (LittyLogs.Webhooks) 📨
+- YEETED the old custom `MatrixWebhookService` and `MatrixConfiguration` — replaced by `LittyLogs.Webhooks` package
+- `MATRIX_ENABLED` and `MATRIX_API_KEY` env vars are GONE — just `MATRIX_WEBHOOK_URL` now, simple as
+- conditional registration in Program.cs — only activates if URL is configured
+- batched delivery (10 msgs / 2s), Polly retry + circuit breaker, best-effort (never crashes the app) 💪
 
-#### rootless Docker container 🔒
-- container now runs as non-root user `evecal` (UID 1654), security going crazy
-- data and logs directories created with proper ownership
-- named Docker volume `evecal-logs` for persistent log storage
+#### security hardening 🔒
+- ReDoS-safe regex with `[GeneratedRegex]` + `RegexOptions.NonBacktracking` for showinfo tag cleaning
+- OAuth callback parameters truncated to prevent log injection
+- API error responses truncated to 1000 chars — no more leaking internal error details to clients
+- `ex.Message` no longer exposed to HTTP responses — generic error messages only
+- `appsettings.Development.json` removed from git, excluded from `dotnet publish`, blocked by `.dockerignore`
+
+#### duplicate logging fix 🔇
+- `ClearProviders()` called before `AddLittyLogs()` to prevent double console output
+- setup mode shutdown changed from `RunAsync()` + `StopAsync()` to `CancellationTokenSource` pattern — no more duplicate Host lifecycle messages
+
+#### webhook integration tests 🧪
+- 4 new integration tests that actually HIT Matrix — observability is non-negotiable
+- tests FAIL HARD if `MATRIX_WEBHOOK_URL` not configured — no silent skips
+- `just test` sources `.env` so webhook URL is available locally
+- CI pipeline passes `MATRIX_WEBHOOK_URL` from Forgejo secrets
 
 #### full release pipeline 🚀
-- adopted gitflow release automation from litty-logs — `just release`, `just hotfix`, `just finish` all work
-- Forgejo CI pipeline: build + test on every push to develop/master
-- Forgejo release pipeline: triggered by `v*` tags, produces:
+- Forgejo CI pipeline (`ci.yml`): build + test on every push to develop/master
+- Forgejo release pipeline (`release.yml`): triggered by `v*` tags, produces:
   - 6 cross-platform self-contained binaries (linux-x64, linux-arm64, win-x64, win-arm64, osx-x64, osx-arm64)
   - multi-arch Docker images (amd64 + arm64) pushed to GHCR + Forgejo registry
   - Forgejo + GitHub mirror releases with changelog notes
 - `Directory.Build.props` as single source of truth for versioning
 - version sanity check in pipeline — tag must match props or it fails
-- 15 tests total, all passing no cap ✅
+- `FORGEJO_TOKEN` yeeted — uses built-in `GITHUB_TOKEN` for Forgejo registry + releases
+
+#### local CI testing with act 🧪
+- `just ci lint` — validate workflow YAML with actionlint
+- `just ci local` — run BOTH ci.yml AND multi-target release build (6 RIDs) locally with act
+- `just ci check` — lint then full local CI run
+- `just ci release` — test just the multi-target release build (6 RID dotnet publish)
+- `.actrc` maps `runs-on: linux` to catthehacker/ubuntu:full-latest
+
+#### docker + justfile improvements 🐳
+- docker-compose now uses published GHCR image by default (`ghcr.io/phsk69/evecal-dotnet:latest`)
+- `just up local` — build from local Dockerfile and start
+- `just up tag` — pull latest GHCR image and start
+- rootless container (UID 10001), named volume for logs
+- Dockerfile now copies `Directory.Build.props` for correct version in builds
+- gitflow release automation — `just release`, `just hotfix`, `just finish`
+
+#### docs 📖
+- README: CI/CD secrets table, branch protection setup, local CI testing, full dev prerequisites
+- CLAUDE.md: updated with all litty commands and webhook logging info
+- 12 tests total (8 ICalGenerator + 4 webhook integration), all passing no cap ✅
 
 ## [0.2.0] - 2026-02-18
 

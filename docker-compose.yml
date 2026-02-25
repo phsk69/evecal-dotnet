@@ -1,6 +1,7 @@
 services:
   evecal:
-    build: .
+    build: .                                    # just up local — builds from Dockerfile
+    image: ghcr.io/phsk69/evecal-dotnet:latest  # just up tag — pulls from GHCR
     ports:
       - "8080:8080"
     volumes:

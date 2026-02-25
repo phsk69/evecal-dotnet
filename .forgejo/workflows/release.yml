@@ -15,6 +15,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: restore the litty CLI tool 🛠️
+        run: dotnet tool restore
+
       - name: figure out the version from the tag 🏷️
         id: version
         run: |
@@ -38,11 +41,11 @@ jobs:
           fi
           echo "version vibes match — ${props_version} 🔥"
 
-      - name: build in release mode 🏗️
-        run: dotnet build --configuration Release
+      - name: litty build in release mode 🏗️🔥
+        run: dotnet litty build --configuration Release
 
-      - name: test one more time for the culture 🧪
-        run: dotnet test --configuration Release --no-build
+      - name: litty test one more time for the culture 🧪🔥
+        run: dotnet litty test --configuration Release --no-build
         env:
           MATRIX_WEBHOOK_URL: ${{ secrets.MATRIX_WEBHOOK_URL }}
 
@@ -93,6 +96,7 @@ jobs:
           fi
 
       - name: upload artifact 📤
+        if: ${{ !env.ACT }}
         uses: actions/upload-artifact@v4
         with:
           name: evecal-${{ matrix.rid }}
@@ -200,38 +204,61 @@ jobs:
             echo "CHANGELOG_EOF"
           } >> "$GITHUB_OUTPUT"
 
-      - name: create forgejo release — home turf first 🏠🔥
+      - name: create or reuse forgejo release 🏠🔥
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_NOTES: ${{ steps.changelog.outputs.notes }}
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           TAG="${{ steps.version.outputs.tag }}"
+          NOTES="$RELEASE_NOTES"
           PRERELEASE="${{ steps.version.outputs.prerelease }}"
           API_URL="${GITHUB_SERVER_URL}/api/v1"
           REPO="${GITHUB_REPOSITORY}"
-          RELEASE_ID=$(curl -s -X POST \
+          # check if release already exists (retryable — no duplicate Ls)
+          HTTP_CODE=$(curl -s -o /tmp/release.json -w "%{http_code}" \
             -H "Authorization: token ${GITHUB_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d "{\"tag_name\": \"${TAG}\", \"name\": \"v${VERSION} — new drop 🔥\", \"body\": $(echo "$RELEASE_NOTES" | jq -Rs .), \"prerelease\": ${PRERELEASE}}" \
-            "${API_URL}/repos/${REPO}/releases" | jq -r '.id')
-          if [ "$RELEASE_ID" = "null" ] || [ -z "$RELEASE_ID" ]; then
-            echo "bruh forgejo release creation failed 💀"
-            exit 1
+            "${API_URL}/repos/${REPO}/releases/tags/${TAG}")
+          if [ "$HTTP_CODE" = "200" ]; then
+            RELEASE_ID=$(jq -r '.id' /tmp/release.json)
+            echo "forgejo release already exists (id ${RELEASE_ID}) — skipping creation 💅"
+          else
+            echo "creating forgejo release 🏗️"
+            RELEASE_ID=$(curl -s -X POST \
+              -H "Authorization: token ${GITHUB_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -d "{\"tag_name\": \"${TAG}\", \"name\": \"v${VERSION} — new drop 🔥\", \"body\": $(echo "$NOTES" | jq -Rs .), \"prerelease\": ${PRERELEASE}}" \
+              "${API_URL}/repos/${REPO}/releases" | jq -r '.id')
+            if [ "$RELEASE_ID" = "null" ] || [ -z "$RELEASE_ID" ]; then
+              echo "bruh forgejo release creation failed 💀"
+              exit 1
+            fi
+            echo "forgejo release created (id ${RELEASE_ID}) 🔥"
           fi
-          echo "forgejo release created with id ${RELEASE_ID} 🔥"
+          # re-fetch release to get fresh asset list
+          curl -s -o /tmp/release.json \
+            -H "Authorization: token ${GITHUB_TOKEN}" \
+            "${API_URL}/repos/${REPO}/releases/${RELEASE_ID}"
+          # upload assets — delete existing dupes first so retries dont brick
           for asset in ./artifacts/evecal-*; do
             filename=$(basename "$asset")
-            echo "uploading ${filename} to forgejo release 📤"
+            ASSET_ID=$(jq -r ".assets[] | select(.name==\"${filename}\") | .id // empty" /tmp/release.json 2>/dev/null)
+            if [ -n "$ASSET_ID" ]; then
+              echo "deleting old ${filename} asset before re-upload 🗑️"
+              curl -s -X DELETE \
+                -H "Authorization: token ${GITHUB_TOKEN}" \
+                "${API_URL}/repos/${REPO}/releases/${RELEASE_ID}/assets/${ASSET_ID}" > /dev/null
+            fi
+            echo "uploading ${filename} 📤"
             curl -s -X POST \
               -H "Authorization: token ${GITHUB_TOKEN}" \
               -H "Content-Type: application/octet-stream" \
               --data-binary "@${asset}" \
-              "${API_URL}/repos/${REPO}/releases/${RELEASE_ID}/assets?name=${filename}"
+              "${API_URL}/repos/${REPO}/releases/${RELEASE_ID}/assets?name=${filename}" > /dev/null
           done
           echo "forgejo release is bussin 🔥"
 
-      - name: create github release on the mirror 🪞
+      - name: create or reuse github release on the mirror 🪞
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
           RELEASE_NOTES: ${{ steps.changelog.outputs.notes }}
@@ -255,9 +282,19 @@ jobs:
             echo "mirror aint synced yet, waiting 2s... (attempt ${i}/30)"
             sleep 2
           done
-          gh release create "${TAG}" \
-            --repo "phsk69/evecal-dotnet" \
-            --title "v${VERSION} — new drop 🔥" \
-            --notes "$RELEASE_NOTES" \
-            $PRERELEASE_FLAG \
-            ./artifacts/evecal-*
+          # create or reuse github release (retryable — re-run all day no Ls 🔄)
+          if gh release view "${TAG}" --repo "phsk69/evecal-dotnet" > /dev/null 2>&1; then
+            echo "github release already exists — uploading fresh assets 💅"
+            gh release upload "${TAG}" \
+              --repo "phsk69/evecal-dotnet" \
+              --clobber \
+              ./artifacts/evecal-*
+          else
+            gh release create "${TAG}" \
+              --repo "phsk69/evecal-dotnet" \
+              --title "v${VERSION} — new drop 🔥" \
+              --notes "$RELEASE_NOTES" \
+              $PRERELEASE_FLAG \
+              ./artifacts/evecal-*
+          fi
+          echo "github release is bussin — binaries shipped everywhere 🔥🚀"
