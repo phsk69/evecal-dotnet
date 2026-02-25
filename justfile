@@ -81,7 +81,7 @@ ci action:
                 act -W .forgejo/workflows/release.yml push \
                     --secret-file .env \
                     -j build-and-test \
-                    -j build-assets \
+                    -j release \
                     --env GITHUB_REF_NAME="v${VERSION}"
                 echo ""
                 echo "both pipelines ate no cap 🔥"
@@ -107,7 +107,7 @@ ci action:
             ;;
         release)
             echo "🏗️ testing multi-target release build locally with act..."
-            echo "this tests build-and-test + build-assets (6 RID dotnet publish) — docker + release creation skipped"
+            echo "this tests build-and-test + release (6 RID dotnet publish) — docker + create-release skipped by act"
             VERSION=$(grep -oP '(?<=<Version>)[^<]+' Directory.Build.props)
             if [ -z "$VERSION" ]; then
                 echo "💀 cant read version from Directory.Build.props bestie"
@@ -118,7 +118,7 @@ ci action:
                 act -W .forgejo/workflows/release.yml push \
                     --secret-file .env \
                     -j build-and-test \
-                    -j build-assets \
+                    -j release \
                     --env GITHUB_REF_NAME="v${VERSION}"
             else
                 echo "💀 no .env file found — create one from .env.example first bestie"

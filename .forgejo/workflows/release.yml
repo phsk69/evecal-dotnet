@@ -49,64 +49,14 @@ jobs:
         env:
           MATRIX_WEBHOOK_URL: ${{ secrets.MATRIX_WEBHOOK_URL }}
 
-  build-assets:
+  release:
     runs-on: linux
     needs: build-and-test
-    strategy:
-      matrix:
-        include:
-          - rid: linux-x64
-            archive: tar.gz
-          - rid: linux-arm64
-            archive: tar.gz
-          - rid: osx-x64
-            archive: tar.gz
-          - rid: osx-arm64
-            archive: tar.gz
-          - rid: win-x64
-            archive: zip
-          - rid: win-arm64
-            archive: zip
     steps:
       - name: yoink the code 📥
         uses: actions/checkout@v4
-
-      - name: figure out the version 🏷️
-        id: version
-        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
-
-      - name: publish for ${{ matrix.rid }} 🏗️
-        run: |
-          dotnet publish src/EveCal.Api \
-            --configuration Release \
-            --runtime ${{ matrix.rid }} \
-            --self-contained \
-            -p:PublishSingleFile=true \
-            -p:IncludeNativeLibrariesForSelfExtract=true \
-            --output ./publish/${{ matrix.rid }}
-
-      - name: package the goods 📦
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          cd ./publish/${{ matrix.rid }}
-          if [ "${{ matrix.archive }}" = "tar.gz" ]; then
-            tar -czf "../../evecal-${VERSION}-${{ matrix.rid }}.tar.gz" .
-          else
-            zip -r "../../evecal-${VERSION}-${{ matrix.rid }}.zip" .
-          fi
-
-      - name: upload artifact 📤
-        uses: actions/upload-artifact@v4
         with:
-          name: evecal-${{ matrix.rid }}
-          path: evecal-*.${{ matrix.archive }}
-
-  build-docker:
-    runs-on: linux
-    needs: build-and-test
-    steps:
-      - name: yoink the code 📥
-        uses: actions/checkout@v4
+          fetch-depth: 0
 
       - name: figure out the version 🏷️
         id: version
@@ -120,6 +70,41 @@ jobs:
             echo "prerelease=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # publish all 6 platforms in a loop — no matrix, no artifacts, just vibes 🔥
+      - name: publish all platform binaries 🏗️
+        run: |
+          for RID in linux-x64 linux-arm64 osx-x64 osx-arm64 win-x64 win-arm64; do
+            echo "publishing for ${RID} 🏗️"
+            dotnet publish src/EveCal.Api \
+              --configuration Release \
+              --runtime "${RID}" \
+              --self-contained \
+              -p:PublishSingleFile=true \
+              -p:IncludeNativeLibrariesForSelfExtract=true \
+              --output "./publish/${RID}"
+          done
+
+      - name: package the goods 📦
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          mkdir -p ./artifacts
+          for RID in linux-x64 linux-arm64 osx-x64 osx-arm64; do
+            echo "packaging ${RID} as tar.gz 📦"
+            cd "./publish/${RID}"
+            tar -czf "../../artifacts/evecal-${VERSION}-${RID}.tar.gz" .
+            cd ../..
+          done
+          for RID in win-x64 win-arm64; do
+            echo "packaging ${RID} as zip 📦"
+            cd "./publish/${RID}"
+            zip -r "../../artifacts/evecal-${VERSION}-${RID}.zip" .
+            cd ../..
+          done
+
+      - name: flex what we got 💅
+        run: ls -la ./artifacts/
+
+      # docker build + push — multi-arch image goes brrr 🐳
       - name: set up docker buildx 🐳
         uses: docker/setup-buildx-action@v3
 
@@ -161,34 +146,7 @@ jobs:
           push: true
           tags: ${{ steps.tags.outputs.tags }}
 
-  create-release:
-    runs-on: linux
-    needs: [build-assets, build-docker]
-    steps:
-      - name: yoink the code 📥
-        uses: actions/checkout@v4
-
-      - name: figure out the version 🏷️
-        id: version
-        run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
-          if [[ "$VERSION" == *-* ]]; then
-            echo "prerelease=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "prerelease=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: download all artifacts 📥
-        uses: actions/download-artifact@v4
-        with:
-          path: ./artifacts
-          merge-multiple: true
-
-      - name: flex what we got 💅
-        run: ls -la ./artifacts/
-
+      # create releases — forgejo + github mirror 🚀
       - name: extract changelog section for this version 📜
         id: changelog
         run: |

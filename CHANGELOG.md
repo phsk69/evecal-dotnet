@@ -2,11 +2,20 @@
 
 all the fire updates go here bestie, no cap
 
+## [0.3.2] - 2026-02-25
+
+### hotfix — simplified release pipeline, yeeted the artifact matrix 🔥
+
+#### pipeline simplification
+- consolidated release pipeline from 4 jobs → 2 jobs — `build-assets` matrix + `create-release` merged into single `release` job that builds all 6 RIDs in a loop, same pattern as litty-logs 💅
+- yeeted `upload-artifact@v4` and `download-artifact@v4` entirely — v4 uses GitHub's artifact API that doesn't work on Forgejo/GHES, and we don't need artifacts when it's all one job no cap 🔧
+- Docker build + push merged into the same `release` job — no more separate `build-docker` job
+
 ## [0.3.1] - 2026-02-25
 
 ### hotfix — upload-artifact revert + docs that actually slay 🔥
 
-#### bug fix
+#### bug fixes
 - reverted `if: ${{ !env.ACT }}` on upload-artifact step — Forgejo runner is based on act so it also sets `ACT=true`, which bricked artifact uploads on real CI 💀
 
 #### docs glow up 📖

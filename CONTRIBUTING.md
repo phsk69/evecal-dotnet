@@ -101,7 +101,6 @@ when running pipelines locally with `act`, some steps will fail — this is norm
 
 | step | what happens | why |
 |------|-------------|-----|
-| `upload-artifact` | fails with `ACTIONS_RUNTIME_TOKEN` error | act doesn't have the GitHub/Forgejo runtime token — artifacts can't be uploaded locally |
 | `build-docker` (multi-arch) | can't be tested | QEMU cross-compilation is cooked for .NET — multi-arch Docker builds run on Forgejo only |
 | `create-release` | can't be tested | needs real Forgejo/GitHub API endpoints |
 
