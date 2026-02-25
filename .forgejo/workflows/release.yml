@@ -15,6 +15,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: restore the litty CLI tool 🛠️
+        run: dotnet tool restore
+
       - name: figure out the version from the tag 🏷️
         id: version
         run: |
@@ -38,11 +41,11 @@ jobs:
           fi
           echo "version vibes match — ${props_version} 🔥"
 
-      - name: build in release mode 🏗️
-        run: dotnet build --configuration Release
+      - name: litty build in release mode 🏗️🔥
+        run: dotnet litty build --configuration Release
 
-      - name: test one more time for the culture 🧪
-        run: dotnet test --configuration Release --no-build
+      - name: litty test one more time for the culture 🧪🔥
+        run: dotnet litty test --configuration Release --no-build
         env:
           MATRIX_WEBHOOK_URL: ${{ secrets.MATRIX_WEBHOOK_URL }}
 

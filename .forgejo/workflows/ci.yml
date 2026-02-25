@@ -14,10 +14,13 @@ jobs:
       - name: yoink the code 📥
         uses: actions/checkout@v4
 
-      - name: build the whole thing bestie 🏗️
-        run: dotnet build --configuration Release
+      - name: restore the litty CLI tool 🛠️
+        run: dotnet tool restore
 
-      - name: run the tests — check all the vibes 🧪
-        run: dotnet test --configuration Release --no-build
+      - name: litty build the whole thing bestie 🏗️🔥
+        run: dotnet litty build --configuration Release
+
+      - name: litty run the tests — check all the vibes 🧪🔥
+        run: dotnet litty test --configuration Release --no-build
         env:
           MATRIX_WEBHOOK_URL: ${{ secrets.MATRIX_WEBHOOK_URL }}
