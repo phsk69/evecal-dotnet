@@ -4,7 +4,7 @@ all the fire updates go here bestie, no cap
 
 ## [0.3.0] - 2026-02-22
 
-### the full glow up — LittyLogs 0.2.1 + security + CI/CD + observability 🔥💅
+### the full glow up — LittyLogs 0.2.3 + security + CI/CD + observability 🔥💅
 
 #### LittyLogs upgrade 0.1.4 → 0.2.3 📦
 - yeeted the homegrown `LittyConsoleFormatter` and replaced with the official [`LittyLogs`](https://github.com/phsk69/litty-logs-dotnet) NuGet package no cap
