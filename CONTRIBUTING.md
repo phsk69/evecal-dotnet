@@ -159,9 +159,10 @@ go to your Forgejo repo → **Settings** → **Actions** → **Secrets** and add
 | Secret | what its for | which pipeline |
 |--------|-------------|----------------|
 | `MATRIX_WEBHOOK_URL` | Matrix hookshot webhook URL — observability tests + runtime notifications | `ci.yml`, `release.yml` |
-| `GH_PAT` | GitHub Personal Access Token — GHCR container registry login + GitHub mirror releases | `release.yml` |
+| `FORGEJO_TOKEN` | Forgejo PAT with `package:write` + `repository:write` scopes — Forgejo registry Docker push + release creation | `release.yml` |
+| `GH_PAT` | GitHub **classic** PAT with `write:packages` + `repo` scopes — GHCR Docker push + GitHub mirror releases (fine-grained tokens [don't work with GHCR](https://github.com/docker/login-action/issues/331)) | `release.yml` |
 
-> **note**: `GITHUB_TOKEN` is auto-provided by the Forgejo runner and covers Forgejo registry login + Forgejo release creation — no extra config needed bestie
+> **note**: `GITHUB_TOKEN` is auto-provided by the Forgejo runner for checkout and basic operations, but it lacks package write perms on some instances — that's why we use a dedicated `FORGEJO_TOKEN` for registry + release stuff
 
 `MATRIX_WEBHOOK_URL` is **required** for both CI and release pipelines — the webhook integration tests will fail hard if its not set. observability is non-negotiable fr fr 🔥
 
