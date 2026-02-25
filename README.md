@@ -243,7 +243,7 @@ this project uses **git flow** with automated Forgejo CI/CD pipelines. releases 
 
 ```bash
 # bump and release
-just release patch    # 0.2.0 -> 0.3.0
+just release patch    # 0.2.0 -> 0.2.1
 just release minor    # 0.2.0 -> 0.3.0
 just release major    # 0.2.0 -> 1.0.0
 
@@ -358,7 +358,7 @@ src/EveCal.Api/
 
 ## security (we take this seriously fr)
 
-- **rootless container** — runs as non-root user `evecal` (UID 1654), no root access needed 🔒
+- **rootless container** — runs as non-root user `evecal` (UID 10001), no root access needed 🔒
 - tokens encrypted with AES-256 before storage, no cap
 - PKCE flow means no client secret needed, built different
 - encryption key auto-generated or you can provide one via environment

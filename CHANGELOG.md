@@ -6,11 +6,11 @@ all the fire updates go here bestie, no cap
 
 ### the full glow up — LittyLogs 0.2.1 + security + CI/CD + observability 🔥💅
 
-#### LittyLogs upgrade 0.1.4 → 0.2.1 📦
+#### LittyLogs upgrade 0.1.4 → 0.2.3 📦
 - yeeted the homegrown `LittyConsoleFormatter` and replaced with the official [`LittyLogs`](https://github.com/phsk69/litty-logs-dotnet) NuGet package no cap
 - `LittyLogs.File` for persistent file logging with daily rolling rotation and 10MB max size 📝
 - `LittyLogs.Webhooks` for Matrix hookshot notifications — warnings and errors go straight to the chat fr fr 📨
-- `LittyLogs.Tool` 0.2.1 as local dotnet tool — `dotnet litty test`, `dotnet litty build`, `dotnet litty publish` all bussin
+- `LittyLogs.Tool` 0.2.3 as local dotnet tool — `dotnet litty test`, `dotnet litty build`, `dotnet litty publish` all bussin
 - `.config/dotnet-tools.json` now tracked in git so `dotnet tool restore` works for everyone
 
 #### Matrix webhook notifications (LittyLogs.Webhooks) 📨
@@ -48,15 +48,16 @@ all the fire updates go here bestie, no cap
 
 #### local CI testing with act 🧪
 - `just ci lint` — validate workflow YAML with actionlint
-- `just ci local` — run full CI pipeline locally with act (no commit spam)
-- `just ci check` — lint then full local run
+- `just ci local` — run BOTH ci.yml AND multi-target release build (6 RIDs) locally with act
+- `just ci check` — lint then full local CI run
+- `just ci release` — test just the multi-target release build (6 RID dotnet publish)
 - `.actrc` maps `runs-on: linux` to catthehacker/ubuntu:full-latest
 
 #### docker + justfile improvements 🐳
 - docker-compose now uses published GHCR image by default (`ghcr.io/phsk69/evecal-dotnet:latest`)
 - `just up local` — build from local Dockerfile and start
 - `just up tag` — pull latest GHCR image and start
-- rootless container (UID 1654), named volume for logs
+- rootless container (UID 10001), named volume for logs
 - Dockerfile now copies `Directory.Build.props` for correct version in builds
 - gitflow release automation — `just release`, `just hotfix`, `just finish`
 

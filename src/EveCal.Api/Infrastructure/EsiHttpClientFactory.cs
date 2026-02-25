@@ -2,7 +2,7 @@ namespace EveCal.Api.Infrastructure;
 
 public class EsiHttpClientHandler(ILogger<EsiHttpClientHandler> logger) : DelegatingHandler
 {
-    private static readonly Random Random = new();
+    // Random.Shared is thread-safe bestie, no lock needed 🔒
     private static int _errorLimitRemain = 100;
     private static DateTime _errorLimitReset = DateTime.UtcNow;
 
@@ -11,7 +11,7 @@ public class EsiHttpClientHandler(ILogger<EsiHttpClientHandler> logger) : Delega
         CancellationToken cancellationToken)
     {
         // adding delay so we don't look like a bot fr
-        var delay = Random.Next(100, 500);
+        var delay = Random.Shared.Next(100, 500);
         await Task.Delay(delay, cancellationToken);
 
         // checking if rate limit is giving
