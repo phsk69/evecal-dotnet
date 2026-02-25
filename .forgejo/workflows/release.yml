@@ -123,7 +123,7 @@ jobs:
         with:
           registry: git.ssy.dk
           username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.FORGEJO_TOKEN }}
 
       - name: figure out docker tags 🏷️
         id: tags
@@ -163,7 +163,7 @@ jobs:
 
       - name: create or reuse forgejo release 🏠🔥
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
           RELEASE_NOTES: ${{ steps.changelog.outputs.notes }}
         run: |
           VERSION="${{ steps.version.outputs.version }}"
@@ -174,7 +174,7 @@ jobs:
           REPO="${GITHUB_REPOSITORY}"
           # check if release already exists (retryable — no duplicate Ls)
           HTTP_CODE=$(curl -s -o /tmp/release.json -w "%{http_code}" \
-            -H "Authorization: token ${GITHUB_TOKEN}" \
+            -H "Authorization: token ${FORGEJO_TOKEN}" \
             "${API_URL}/repos/${REPO}/releases/tags/${TAG}")
           if [ "$HTTP_CODE" = "200" ]; then
             RELEASE_ID=$(jq -r '.id' /tmp/release.json)
@@ -182,7 +182,7 @@ jobs:
           else
             echo "creating forgejo release 🏗️"
             RELEASE_ID=$(curl -s -X POST \
-              -H "Authorization: token ${GITHUB_TOKEN}" \
+              -H "Authorization: token ${FORGEJO_TOKEN}" \
               -H "Content-Type: application/json" \
               -d "{\"tag_name\": \"${TAG}\", \"name\": \"v${VERSION} — new drop 🔥\", \"body\": $(echo "$NOTES" | jq -Rs .), \"prerelease\": ${PRERELEASE}}" \
               "${API_URL}/repos/${REPO}/releases" | jq -r '.id')
@@ -194,7 +194,7 @@ jobs:
           fi
           # re-fetch release to get fresh asset list
           curl -s -o /tmp/release.json \
-            -H "Authorization: token ${GITHUB_TOKEN}" \
+            -H "Authorization: token ${FORGEJO_TOKEN}" \
             "${API_URL}/repos/${REPO}/releases/${RELEASE_ID}"
           # upload assets — delete existing dupes first so retries dont brick
           for asset in ./artifacts/evecal-*; do
@@ -203,12 +203,12 @@ jobs:
             if [ -n "$ASSET_ID" ]; then
               echo "deleting old ${filename} asset before re-upload 🗑️"
               curl -s -X DELETE \
-                -H "Authorization: token ${GITHUB_TOKEN}" \
+                -H "Authorization: token ${FORGEJO_TOKEN}" \
                 "${API_URL}/repos/${REPO}/releases/${RELEASE_ID}/assets/${ASSET_ID}" > /dev/null
             fi
             echo "uploading ${filename} 📤"
             curl -s -X POST \
-              -H "Authorization: token ${GITHUB_TOKEN}" \
+              -H "Authorization: token ${FORGEJO_TOKEN}" \
               -H "Content-Type: application/octet-stream" \
               --data-binary "@${asset}" \
               "${API_URL}/repos/${REPO}/releases/${RELEASE_ID}/assets?name=${filename}" > /dev/null
