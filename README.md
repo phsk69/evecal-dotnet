@@ -78,15 +78,29 @@ a .NET 10 service that serves up your **corporation** EVE Online calendar events
 
 ### Pre-built binary
 
-grab the latest release for your platform from [releases](https://github.com/phsk69/evecal-dotnet/releases):
+grab the latest release for your platform from [releases](https://github.com/phsk69/evecal-dotnet/releases) — self-contained binaries, no .NET runtime needed fr fr:
 
 ```bash
-# linux example
-tar xzf evecal-*.tar.gz
+# linux/macOS
+tar xzf evecal-*-linux-x64.tar.gz
 export EVE_CLIENT_ID=your_client_id
-./EveCal.Api setup    # one-time OAuth setup
-./EveCal.Api          # run the service
+export EVE_DATA_PATH=./data
+./EveCal.Api setup    # one-time OAuth setup (needs browser)
+./EveCal.Api          # run the service on port 8080
 ```
+
+```powershell
+# windows
+Expand-Archive evecal-*-win-x64.zip -DestinationPath .\evecal
+$env:EVE_CLIENT_ID = "your_client_id"
+$env:EVE_DATA_PATH = ".\data"
+.\evecal\EveCal.Api.exe setup
+.\evecal\EveCal.Api.exe
+```
+
+available for: `linux-x64`, `linux-arm64`, `osx-x64`, `osx-arm64`, `win-x64`, `win-arm64`
+
+> deploying on a remote server? need systemd, reverse proxy (nginx/caddy), or headless setup? check the full [DEPLOYMENT](DEPLOYMENT.md) guide bestie 🔥
 
 ### Docker images
 
@@ -153,7 +167,7 @@ features: batched delivery (10 msgs / 2s), Polly retry + circuit breaker, best-e
 
 ## development
 
-see [CONTRIBUTING.md](CONTRIBUTING.md) for the full dev guide — prerequisites, building, testing, local CI, release management, architecture, and more 🔥
+see [CONTRIBUTING](CONTRIBUTING.md) for the full dev guide — prerequisites, building, testing, local CI, release management, architecture, and more 🔥
 
 ## security (we take this seriously fr)
 
