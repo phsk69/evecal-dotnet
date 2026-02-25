@@ -1,8 +1,7 @@
-using EveCal.Api.Infrastructure;
 using EveCal.Api.Models;
 using EveCal.Api.Services;
+using LittyLogs;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Console;
 using Moq;
 using Xunit;
 
@@ -24,8 +23,7 @@ public class ICalGeneratorServiceTests
         // real litty logger so test output is bussin too 🔥
         var loggerFactory = LoggerFactory.Create(builder =>
         {
-            builder.AddConsole(options => options.FormatterName = "litty");
-            builder.AddConsoleFormatter<LittyConsoleFormatter, LittyConsoleFormatterOptions>();
+            builder.AddLittyLogs(opts => opts.UseColors = false);
         });
         _logger = loggerFactory.CreateLogger<ICalGeneratorService>();
 
@@ -221,6 +219,42 @@ public class ICalGeneratorServiceTests
 
         // assert - importance 2 should map to priority 1 (high)
         Assert.Contains("PRIORITY:1", result);
+    }
+
+    [Fact]
+    public async Task GenerateFeedAsync_HandlesMalformedHtmlWithoutHanging()
+    {
+        // arrange - malformed HTML that would cause ReDoS with backtracking regex
+        // 10k spaces after <a = no closing >, regex must not hang
+        var malformedHtml = "<a" + new string(' ', 10_000) + "payload";
+        var events = new List<EveCalendarEventDetail>
+        {
+            new()
+            {
+                EventId = 99,
+                Title = "ReDoS Test",
+                Text = malformedHtml,
+                Date = DateTime.UtcNow.AddDays(1),
+                Duration = 60,
+                Importance = 1,
+                OwnerName = "Test Corp",
+                OwnerType = "corporation"
+            }
+        };
+
+        _mockCalendarService
+            .Setup(x => x.GetCorporationEventsAsync())
+            .ReturnsAsync(events);
+
+        // act — this should complete instantly, not hang for minutes
+        var task = _service.GenerateFeedAsync();
+        var completed = await Task.WhenAny(task, Task.Delay(TimeSpan.FromSeconds(2)));
+
+        // assert — if Task.Delay won the race we got ReDoS'd 💀
+        Assert.Equal(task, completed);
+
+        var result = await task;
+        Assert.Contains("BEGIN:VCALENDAR", result);
     }
 
     [Fact]

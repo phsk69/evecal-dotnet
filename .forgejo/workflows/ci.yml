@@ -1,0 +1,26 @@
+# ci pipeline — makes sure nothing is bricked before we merge no cap 🔥
+name: ci
+
+on:
+  push:
+    branches: [develop, master]
+  pull_request:
+    branches: [develop, master]
+
+jobs:
+  build-and-test:
+    runs-on: linux
+    steps:
+      - name: yoink the code 📥
+        uses: actions/checkout@v4
+
+      - name: restore the litty CLI tool 🛠️
+        run: dotnet tool restore
+
+      - name: litty build the whole thing bestie 🏗️🔥
+        run: dotnet litty build --configuration Release
+
+      - name: litty run the tests — check all the vibes 🧪🔥
+        run: dotnet litty test --configuration Release --no-build
+        env:
+          MATRIX_WEBHOOK_URL: ${{ secrets.MATRIX_WEBHOOK_URL }}

@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "littylogs.tool": {
+      "version": "0.2.3",
+      "commands": [
+        "litty"
+      ],
+      "rollForward": false
+    }
+  }
+}

@@ -47,6 +47,9 @@ data/
 .env.*
 !.env.example
 
+# Appsettings 
+**/appsettings.*.json
+
 # OS
 .DS_Store
 Thumbs.db

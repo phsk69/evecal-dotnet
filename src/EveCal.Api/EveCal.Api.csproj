@@ -6,8 +6,16 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <!-- dev appsettings stays local, never ships in publish 🔒 -->
+  <ItemGroup>
+    <Content Remove="appsettings.Development.json" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Ical.Net" Version="5.2.1" />
+    <PackageReference Include="LittyLogs" Version="0.2.3" />
+    <PackageReference Include="LittyLogs.File" Version="0.2.3" />
+    <PackageReference Include="LittyLogs.Webhooks" Version="0.2.3" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.16.0" />
   </ItemGroup>

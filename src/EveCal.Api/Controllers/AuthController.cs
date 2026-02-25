@@ -24,8 +24,10 @@ public class AuthController(
     {
         if (!string.IsNullOrEmpty(error))
         {
-            logger.LogError("💀 bruh OAuth fumbled: {Error} - {Description}", error, error_description);
-            return BadRequest(new { error, description = error_description });
+            var safeError = Truncate(error, 200);
+            var safeDesc = Truncate(error_description, 500);
+            logger.LogError("💀 bruh OAuth fumbled: {Error} - {Description}", safeError, safeDesc);
+            return BadRequest(new { error = safeError, description = safeDesc });
         }
 
         if (string.IsNullOrEmpty(code))
@@ -72,7 +74,7 @@ public class AuthController(
         {
             logger.LogError(ex, "💀 OAuth flow caught an L fr");
             _setupCompletionSource?.TrySetException(ex);
-            return StatusCode(500, new { error = "💀 Failed to complete authentication fr", details = ex.Message });
+            return StatusCode(500, new { error = "💀 authentication flopped, check server logs bestie" });
         }
     }
 
@@ -84,4 +86,8 @@ public class AuthController(
         _setupCompletionSource = new TaskCompletionSource<bool>();
         return (authUrl, _setupCompletionSource);
     }
+
+    // keeps strings from going feral on us 📏
+    private static string? Truncate(string? value, int maxLength) =>
+        value?.Length > maxLength ? value[..maxLength] + "..." : value;
 }
