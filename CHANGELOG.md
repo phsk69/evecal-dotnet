@@ -2,6 +2,18 @@
 
 all the fire updates go here bestie, no cap
 
+## [0.3.1] - 2026-02-25
+
+### hotfix — upload-artifact revert + dev docs split 🔥
+
+#### bug fix
+- reverted `if: ${{ !env.ACT }}` on upload-artifact step — Forgejo runner is based on act so it also sets `ACT=true`, which bricked artifact uploads on real CI 💀
+
+#### docs glow up 📖
+- split developer-facing content from README into [CONTRIBUTING.md](CONTRIBUTING.md) — README stays clean for users, dev guide lives in its own file
+- added "known act limitations" section documenting expected local CI failures (upload-artifact, multi-arch Docker, create-release)
+- README slimmed from 391 to ~170 lines — user-facing only, links to CONTRIBUTING.md for dev stuff
+
 ## [0.3.0] - 2026-02-22
 
 ### the full glow up — LittyLogs 0.2.3 + security + CI/CD + observability 🔥💅
