@@ -2,6 +2,29 @@
 
 all the fire updates go here bestie, no cap
 
+## [0.3.1] - 2026-02-25
+
+### hotfix — upload-artifact revert + docs that actually slay 🔥
+
+#### bug fix
+- reverted `if: ${{ !env.ACT }}` on upload-artifact step — Forgejo runner is based on act so it also sets `ACT=true`, which bricked artifact uploads on real CI 💀
+
+#### docs glow up 📖
+- split developer-facing content from README into [CONTRIBUTING.md](CONTRIBUTING.md) — README stays clean for users, dev guide lives in its own file
+- added "known act limitations" section documenting expected local CI failures (upload-artifact, multi-arch Docker, create-release)
+- README slimmed from 391 to ~190 lines — user-facing only, links to CONTRIBUTING.md for dev stuff
+
+#### DEPLOYMENT.md — the "works on my machine" era is JOVER 💀
+- NEW [DEPLOYMENT.md](DEPLOYMENT.md) — full bare metal deployment guide for all 6 platforms, the works on my machine era is literally over no cap
+- environment variables reference table with required/optional/defaults for every var
+- Linux systemd service file with security hardening (`NoNewPrivileges`, `ProtectSystem=strict`, auto-restart) — the most based way to run EveCal fr fr 🐧
+- reverse proxy configs for nginx + Caddy (auto-TLS) — no built-in TLS so this is non-negotiable bestie 🔒
+- headless server OAuth setup with 3 options: SSH tunnel (recommended), public URL, or token transfer from local machine 🖥️
+- macOS deployment with launchd plist (or just tmux like a normal person) 🍎
+- Windows deployment with PowerShell + NSSM service manager 🪟
+- data persistence, backup strategy, and upgrade guide — lose your encryption key and it's jover 💾
+- README pre-built binary section expanded with linux + windows quick start examples and link to DEPLOYMENT.md
+
 ## [0.3.0] - 2026-02-22
 
 ### the full glow up — LittyLogs 0.2.3 + security + CI/CD + observability 🔥💅
