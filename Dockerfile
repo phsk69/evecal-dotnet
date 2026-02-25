@@ -14,6 +14,7 @@ RUN dotnet publish -c Release -o /app/publish --no-restore
 
 # Runtime stage — rootless container fr fr 🔥
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+
 WORKDIR /app
 
 # create non-root user so we running rootless bestie 🔒

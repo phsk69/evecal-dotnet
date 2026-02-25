@@ -2,6 +2,14 @@
 
 all the fire updates go here bestie, no cap
 
+## [0.3.4] - 2026-02-26
+
+### hotfix — OCI labels so Docker packages link to the repo automatically 🏷️
+
+#### bug fix
+- split Docker build-push into two steps (GHCR + Forgejo) with registry-specific `org.opencontainers.image.source` OCI labels — each registry auto-links the package to its own repo now. `image.source` only takes one value so a single build couldn't serve both 💀
+- labels set at build time via `build-push-action` `labels:` input instead of hardcoding in Dockerfile
+
 ## [0.3.3] - 2026-02-25
 
 ### hotfix — Forgejo registry auth fix 🔐
