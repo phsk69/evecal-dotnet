@@ -2,6 +2,14 @@
 
 all the fire updates go here bestie, no cap
 
+## [0.3.3] - 2026-02-25
+
+### hotfix — Forgejo registry auth fix 🔐
+
+#### bug fix
+- swapped Forgejo registry + release API auth from built-in `GITHUB_TOKEN` → dedicated `FORGEJO_TOKEN` PAT — runner token lacked package write perms, Docker push was getting `401 reqPackageAccess` 💀
+- also: `GH_PAT` for GHCR must be a **classic** token with `write:packages` scope — fine-grained tokens [don't support GHCR](https://github.com/docker/login-action/issues/331) and that's on GitHub fr fr
+
 ## [0.3.2] - 2026-02-25
 
 ### hotfix — simplified release pipeline, yeeted the artifact matrix 🔥
