@@ -4,8 +4,26 @@
 build:
     docker-compose build
 
-# Run setup (builds locally first since you need the container for OAuth flow)
-setup: build
+# Run setup (OAuth flow) — just setup local (build from source) or just setup tag (pull GHCR image) 🔐
+# usage: just setup local | tag
+setup mode="local":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    case "{{mode}}" in
+        local)
+            echo "🏗️ building from local Dockerfile for setup..."
+            docker-compose build
+            ;;
+        tag)
+            echo "📦 pulling latest image from GHCR for setup..."
+            docker-compose pull
+            ;;
+        *)
+            echo "fam thats not a valid setup mode — use local or tag no cap 😤"
+            exit 1
+            ;;
+    esac
+    echo "🔐 starting OAuth setup flow — follow the link bestie..."
     docker-compose run --rm --service-ports evecal setup
 
 # Start the service — just up local (build from source) or just up tag (pull GHCR image) 🚀
@@ -134,7 +152,7 @@ ci action:
 # yeet all build artifacts and token data
 clean:
     dotnet clean
-    rm -f data/tokens.enc data/encryption.key
+    docker volume rm evecal-data 2>/dev/null || true
 
 # bump the version bestie — usage: just bump major|minor|patch 🔥
 bump part:

@@ -4,11 +4,17 @@ all the fire updates go here bestie, no cap
 
 ## [0.3.5] - 2026-02-26
 
-### hotfix — GHCR package linking fix (index-level annotations) 🏷️
+### hotfix — GHCR linking + Docker perms fix + setup glow up 🏷️🐳
 
-#### bug fix
+#### bug fixes
 - GHCR wasn't auto-linking Docker packages to the repo because multi-platform builds need OCI annotations at the **manifest index level**, not image-level labels. swapped `labels:` → `annotations:` with `index:` prefix on the GHCR build step — Forgejo was already bussin with labels so that stays 💅
 - reordered Docker build steps: Forgejo registry first (home first bestie 🏠), then GHCR
+- Docker container was bricking on first OAuth setup — `Permission denied` writing `/app/data/encryption.key` 💀 bind mount (`./data:/app/data`) creates host dir as root but container runs rootless (UID 10001). swapped to named volume `evecal-data` — named volumes respect Dockerfile ownership, bind mounts don't no cap 🐳
+
+#### improvements
+- `just setup` now accepts `local` or `tag` mode (like `just up`) — `just setup tag` pulls the GHCR image instead of forcing a local build 🔐
+- `just clean` now yeets the `evecal-data` Docker volume instead of trying to `rm` files from a bind mount that doesn't exist anymore 🧹
+- documented GHCR package visibility gotcha in README — packages are private by default even on public repos, gotta flip it manually in GitHub settings (one-time thing) 💀
 
 #### dependency upgrade
 - bumped `actions/checkout` v4 → v5 across both CI and release pipelines — v6 is [bricked on Forgejo](https://github.com/actions/checkout/issues/2321) with hardcoded GitHub paths 💀 v5 uses universal HTTP auth that works everywhere no cap

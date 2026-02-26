@@ -5,7 +5,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./data:/app/data
+      - evecal-data:/app/data
       - evecal-logs:/app/logs
     env_file:
       - .env
@@ -18,5 +18,7 @@ services:
     restart: unless-stopped
 
 volumes:
+  evecal-data:
+    name: evecal-data
   evecal-logs:
     name: evecal-logs
