@@ -2,6 +2,17 @@
 
 all the fire updates go here bestie, no cap
 
+## [0.3.5] - 2026-02-26
+
+### hotfix — GHCR package linking fix (index-level annotations) 🏷️
+
+#### bug fix
+- GHCR wasn't auto-linking Docker packages to the repo because multi-platform builds need OCI annotations at the **manifest index level**, not image-level labels. swapped `labels:` → `annotations:` with `index:` prefix on the GHCR build step — Forgejo was already bussin with labels so that stays 💅
+- reordered Docker build steps: Forgejo registry first (home first bestie 🏠), then GHCR
+
+#### dependency upgrade
+- bumped `actions/checkout` v4 → v5 across both CI and release pipelines — v6 is [bricked on Forgejo](https://github.com/actions/checkout/issues/2321) with hardcoded GitHub paths 💀 v5 uses universal HTTP auth that works everywhere no cap
+
 ## [0.3.4] - 2026-02-26
 
 ### hotfix — OCI labels so Docker packages link to the repo automatically 🏷️

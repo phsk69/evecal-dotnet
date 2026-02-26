@@ -12,7 +12,7 @@ jobs:
     runs-on: linux
     steps:
       - name: yoink the code 📥
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: restore the litty CLI tool 🛠️
         run: dotnet tool restore
