@@ -11,7 +11,7 @@ jobs:
     runs-on: linux
     steps:
       - name: yoink the code 📥
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -54,7 +54,7 @@ jobs:
     needs: build-and-test
     steps:
       - name: yoink the code 📥
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
