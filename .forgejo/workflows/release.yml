@@ -141,19 +141,7 @@ jobs:
           echo "ghcr_tags=${GHCR_TAGS}" >> "$GITHUB_OUTPUT"
           echo "forgejo_tags=${FORGEJO_TAGS}" >> "$GITHUB_OUTPUT"
 
-      - name: build and push to GHCR 🐳🔥
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.tags.outputs.ghcr_tags }}
-          labels: |
-            org.opencontainers.image.source=https://github.com/phsk69/evecal-dotnet
-            org.opencontainers.image.description=EVE Online corp calendar ICS feed service
-            org.opencontainers.image.licenses=MIT
-
-      - name: build and push to Forgejo registry 🏠🐳
+      - name: build and push to Forgejo registry (home first) 🏠🐳
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -164,6 +152,18 @@ jobs:
             org.opencontainers.image.source=https://git.ssy.dk/public/evecal-dotnet
             org.opencontainers.image.description=EVE Online corp calendar ICS feed service
             org.opencontainers.image.licenses=MIT
+
+      - name: build and push to GHCR 🐳🔥
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.tags.outputs.ghcr_tags }}
+          annotations: |
+            index:org.opencontainers.image.source=https://github.com/phsk69/evecal-dotnet
+            index:org.opencontainers.image.description=EVE Online corp calendar ICS feed service
+            index:org.opencontainers.image.licenses=MIT
 
       # create releases — forgejo + github mirror 🚀
       - name: extract changelog section for this version 📜
