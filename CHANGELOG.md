@@ -2,6 +2,14 @@
 
 all the fire updates go here bestie, no cap
 
+## [0.3.6] - 2026-03-25
+
+### dependency glow up — keeping the packages fresh 📦
+
+#### dependency upgrades
+- bumped `Microsoft.AspNetCore.OpenApi` 10.0.3 → 10.0.5 — staying current with the OpenAPI drip no cap 🔥
+- bumped `System.IdentityModel.Tokens.Jwt` 8.16.0 → 8.17.0 — JWT handling stays bussin with the latest fixes fr fr 🔐
+
 ## [0.3.5] - 2026-02-26
 
 ### hotfix — GHCR linking + Docker perms fix + setup glow up 🏷️🐳
