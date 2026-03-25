@@ -1,6 +1,6 @@
 <Project>
   <!-- the one true version bestie — bump this and the whole squad levels up 🔥 -->
   <PropertyGroup>
-    <Version>0.3.5</Version>
+    <Version>0.3.6</Version>
   </PropertyGroup>
 </Project>
