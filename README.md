@@ -112,6 +112,8 @@ docker pull ghcr.io/phsk69/evecal-dotnet:latest
 docker pull git.ssy.dk/public/evecal-dotnet:latest
 ```
 
+> **note**: GHCR packages are private by default even on public repos 💀 after the first push you gotta [flip the package to public](https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility) in GitHub package settings (one-time thing). Forgejo packages inherit repo visibility automatically so that's already bussin 💅
+
 ## endpoints
 
 | Endpoint | what it does |
@@ -135,11 +137,11 @@ docker pull git.ssy.dk/public/evecal-dotnet:latest
 
 ### data persistence
 
-token data lives in `/app/data` inside the container. mount a volume so tokens survive restarts:
+token data lives in `/app/data` inside the container. a named Docker volume keeps them around (named volumes respect rootless container permissions, bind mounts don't 💀):
 
 ```yaml
 volumes:
-  - ./data:/app/data
+  - evecal-data:/app/data
 ```
 
 ### log persistence
@@ -190,8 +192,8 @@ docker-compose run --rm --service-ports evecal setup
 
 your refresh token probably got yeeted. delete tokens and re-auth:
 ```bash
-rm ./data/tokens.enc
-docker-compose run --rm --service-ports evecal setup
+docker compose exec evecal rm /app/data/tokens.enc
+docker compose run --rm --service-ports evecal setup
 ```
 
 ### rate limiting
